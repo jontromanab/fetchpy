@@ -51,8 +51,9 @@ class FETCHRobot(Robot):
         Robot.__init__(self, robot_name = 'fetch')
         self.robot_checker_factory = robot_checker_factory
 
+
         #Controller Setup
-        self.controller_manager = None
+        #self.controller_manager = None
         self.controller_always_on = []
         self.full_controller_sim = (arm_sim and arm_torso_sim and 
         gripper_sim and head_sim)
@@ -96,8 +97,8 @@ class FETCHRobot(Robot):
                 affine_dofs=0, simulated=True)
 
         #load and activate initial controllers(change)
-        if self.controller_manager is not None:
-            self.controller_manager.request(self.controller_always_on).switch()
+        #if self.controller_manager is not None:
+            #self.controller_manager.request(self.controller_always_on).switch()
 
         # Support for named configurations.(change)
         import os.path
@@ -204,83 +205,89 @@ class FETCHRobot(Robot):
         #     from actionlib import SimpleActionClient
         #     self._say_action_client = SimpleActionClient('say', talker.msg.SayAction)
 
-        def CloneBindings(self, parent):
-            super(FETCHRobot, self).CloneBindings(parent)
-            self.arm = Cloned(parent.arm)
+    def CloneBindings(self, parent):
+        super(FETCHRobot, self).CloneBindings(parent)
+        self.arm = Cloned(parent.arm)
+        self.manipulators = [self.arm]
+        self.planner = parent.planner
 
     	#Add all here (change)
 
-        def _ExecuteTrajectory(self, traj, defer=False, timeout=None, period=0.01,**kwargs):
-            if defer is not False:
-                raise RuntimeError('defer functionality was deprecated in '
-                               'personalrobotics/prpy#278')
+    def _ExecuteTrajectory(self, traj, defer=False, timeout=None, period=0.01,**kwargs):
+        #print 'HELLLLLLLLOOOOOOOOOOOOOO>>>>>>>I am here<<<<<<<<<'
+        if defer is not False:
+            raise RuntimeError('defer functionality was deprecated in ''personalrobotics/prpy#278')
             # Don't execute trajectories that don't have at least one waypoint.
-            if traj.GetNumWaypoints() <= 0:
-                raise ValueError('Trajectory must contain at least one waypoint.')
-            # Check if this trajectory contains both affine and joint DOFs
-            cspec = traj.GetConfigurationSpecification()
-            needs_base = prpy.util.HasAffineDOFs(cspec)
-            needs_joints = prpy.util.HasJointDOFs(cspec)
-            if needs_base and needs_joints:
-                raise ValueError('Trajectories with affine and joint DOFs are not supported')
+        if traj.GetNumWaypoints() <= 0:
+            raise ValueError('Trajectory must contain at least one waypoint.')
+        # Check if this trajectory contains both affine and joint DOFs
+        cspec = traj.GetConfigurationSpecification()
+        needs_base = prpy.util.HasAffineDOFs(cspec)
+        needs_joints = prpy.util.HasJointDOFs(cspec)
+        if needs_base and needs_joints:
+            raise ValueError('Trajectories with affine and joint DOFs are not supported')
 
-            # Check that the current configuration of the robot matches the
-            # initial configuration specified by the trajectory.
-            if not prpy.util.IsAtTrajectoryStart(self, traj):
-                raise TrajectoryNotExecutable('Trajectory started from different configuration than robot.')
-            # If there was only one waypoint, at this point we are done!
-            if traj.GetNumWaypoints() == 1:
-                return traj
-            # Verify that the trajectory is timed by checking whether the first
-            # waypoint has a valid deltatime value.
-            if not prpy.util.IsTimedTrajectory(traj):
-                raise ValueError('Trajectory cannot be executed, it is not timed.')
+        # Check that the current configuration of the robot matches the
+        # initial configuration specified by the trajectory.
+        if not prpy.util.IsAtTrajectoryStart(self, traj):
+            raise TrajectoryNotExecutable('Trajectory started from different configuration than robot.')
+        # If there was only one waypoint, at this point we are done!
+        if traj.GetNumWaypoints() == 1:
+            return traj
+        # Verify that the trajectory is timed by checking whether the first
+        # waypoint has a valid deltatime value.
+        #if not prpy.util.IsTimedTrajectory(traj):
+            #raise ValueError('Trajectory cannot be executed, it is not timed.')
 
-            # Verify that the trajectory has non-zero duration.
-            if traj.GetDuration() <= 0.0:
-                logger.warning('Executing zero-length trajectory. Please update the'
+        # Verify that the trajectory has non-zero duration.
+        if traj.GetDuration() <= 0.0:
+            logger.warning('Executing zero-length trajectory. Please update the'
                           ' function that produced this trajectory to return a'
                           ' single-waypoint trajectory.', FutureWarning)
-            traj_manipulators = self.GetTrajectoryManipulators(traj)
-            controllers_manip = []
-            active_controllers = []
+        traj_manipulators = self.GetTrajectoryManipulators(traj)
+        controllers_manip = []
+        active_controllers = []
 
-            #HEAD in traj(change)
-            # if self.head in traj_manipulators:
-            # 	# TODO head after Schunk integration
-            #     if len(traj_manipulators) == 1:
-            #         raise NotImplementedError('The head is currently disabled under ros_control.')
-            #     else:
-            #         logger.warning('The head is currently disabled under ros_control.')
+        #HEAD in traj(change)
+        # if self.head in traj_manipulators:
+        # 	# TODO head after Schunk integration
+        #     if len(traj_manipulators) == 1:
+        #         raise NotImplementedError('The head is currently disabled under ros_control.')
+        #     else:
+        #         logger.warning('The head is currently disabled under ros_control.')
 
-            # logic to determine which controllers are needed(change)
-            if self.arm in traj_manipulators:
-                if not self.arm.IsSimulated():
-                    controllers_manip.append('arm_controller')
-            else:
-                active_controllers.append(self.arm.sim_controller)
+        # logic to determine which controllers are needed(change)
+        if self.arm in traj_manipulators:
+            if not self.arm.IsSimulated():
+                controllers_manip.append('arm_controller')
+        else:
+            active_controllers.append(self.arm.sim_controller)
 
-            # load and activate controllers(change)
-            if not self.full_controller_sim:
-                self.controller_manager.request(controllers_manip).switch()
+	
 
-            # repeat logic and actually construct controller clients
-            # now that we've activated them on the robot
-            if 'arm_controller' in controllers_manip:
-                active_controllers.append(RewdOrTrajectoryController(self, '',
-                    'arm_controller',self.arm.GetJointNames()))
+        # load and activate controllers(change)
+        #if not self.full_controller_sim:
+        #self.controller_manager.request(controllers_manip).switch()
 
-            ##ADD HERE ALL THE CONTROLLERS (change)
-            for controller in active_controllers:
-                controller.SetPath(traj)
+        # repeat logic and actually construct controller clients
+        # now that we've activated them on the robot
+        if 'arm_controller' in controllers_manip:
+            active_controllers.append(RewdOrTrajectoryController(self, '',
+                'arm_controller',self.arm.GetJointNames()))
 
-            prpy.util.WaitForControllers(active_controllers, timeout=timeout)
-            return traj
+        ##ADD HERE ALL THE CONTROLLERS (change)
+        for controller in active_controllers:
+	    #print str(controller)
+            controller.SetPath(traj)
+
+        prpy.util.WaitForControllers(active_controllers, timeout=timeout)
+        return traj
 
 
-        def ExecuteTrajectory(self, traj, *args, **kwargs):
-            value = self._ExecuteTrajectory(traj, *args, **kwargs)
-            return value
+    def ExecuteTrajectory(self, traj, *args, **kwargs):
+        #print 'HELLLLLLLLOOOOOOOOOOOOOO>>>>>>>I am here executing<<<<<<<<<'
+        value = self._ExecuteTrajectory(traj, *args, **kwargs)
+        return value
 
         # Inherit docstring from the parent class.
         ExecuteTrajectory.__doc__ = Robot.ExecuteTrajectory.__doc__

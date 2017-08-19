@@ -17,7 +17,7 @@ from .fetchrobot import FETCHRobot
 
 logger = logging.getLogger('fetchpy')
 
-def initialize(robot_xml = None, env_path = None, viewer = 'rviz',sim = True, **kw_args):
+def initialize(robot_xml = None, env_path = None, viewer = 'rviz',sim = False, **kw_args):
 	prpy.logger.initialize_logging()
 
 
@@ -89,10 +89,10 @@ def initialize(robot_xml = None, env_path = None, viewer = 'rviz',sim = True, **
 		**kw_args)
 
 	if sim:
-		dof_indices, dof_values = robot.configurations.get_configuration('relaxed_home')
+		dof_indices, dof_values = robot.configurations.get_configuration('straight')
 		robot.SetDOFValues(dof_values, dof_indices)
 
-	#Only two viewers are supported. If no viewer is mentioned it will default to rviz. Otherwise --viewer qtcoin
+	#Start by attempting to load or_rviz.
 	viewers = ['qtcoin','rviz']
 	if viewer is None:
 		viewer = 'rviz'

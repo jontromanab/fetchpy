@@ -126,6 +126,13 @@ class ARM(Manipulator):
     		'set the velocity limit of both OR and real robot')
 		Manipulator.SetVelocityLimits(self, velocity_limits, min_accel_time)
 
+	def GetTrajectoryStatus(manipulator):
+		"""Gets the status of the current (or previous) trajectory executed by OWD.
+		@return status of the current (or previous) trajectory executed
+		"""
+		raise NotImplementedError('GetTrajectoryStatus not supported on manipulator.'
+			' Use returned TrajectoryFuture instead.')
+
 	def ClearTrajectoryStatus(manipulator):
 		"""Clears the current trajectory execution status.
 		 This resets the output of \ref GetTrajectoryStatus.
