@@ -59,17 +59,29 @@ class FETCHRobot(Robot):
         gripper_sim and head_sim)
 
         if not self.full_controller_sim:
-            print ' I am HERE'
+            #print ' I am HERE'
             import rospy
             from ros_control_client_py import(ControllerManagerClient,
                 JointStateClient,)
+            import rosgraph.masterapi 
 
             if not rospy.core.is_initialized():
                 raise RuntimeError('rospy not initialized.'
                     'Must call rospy.init_node()')
+
+            master = rosgraph.masterapi.Master('/rostopic') 
+            topics = []
+            for i in master.getPublishedTopics(''):
+                topics.append(i[0])
+            
+            if '/joint_states' not in topics:
+                raise RuntimeError('The -sim argument should be set if there is'
+                    ' No real robot/Gazebo robot connected')
+
+            
             #update openrave state from /joint_states
             self._jointstate_client = JointStateClient(self, topic_name='/joint_states')
-            self.controller_manager = ControllerManagerClient()
+            #self.controller_manager = ControllerManagerClient()
             self.controller_always_on.append('joint_state_controller')
 
         # Convenience attributes for accessing self components.
