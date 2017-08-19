@@ -53,12 +53,13 @@ class FETCHRobot(Robot):
 
 
         #Controller Setup
-        #self.controller_manager = None
+        self.controller_manager = None
         self.controller_always_on = []
         self.full_controller_sim = (arm_sim and arm_torso_sim and 
         gripper_sim and head_sim)
 
         if not self.full_controller_sim:
+            print ' I am HERE'
             import rospy
             from ros_control_client_py import(ControllerManagerClient,
                 JointStateClient,)
@@ -68,7 +69,7 @@ class FETCHRobot(Robot):
                     'Must call rospy.init_node()')
             #update openrave state from /joint_states
             self._jointstate_client = JointStateClient(self, topic_name='/joint_states')
-            #self.controller_manager = ControllerManagerClient()
+            self.controller_manager = ControllerManagerClient()
             self.controller_always_on.append('joint_state_controller')
 
         # Convenience attributes for accessing self components.
@@ -95,7 +96,7 @@ class FETCHRobot(Robot):
             self.arm.sim_controller = self.AttachController(name=self.arm.GetName(),
                 args = 'IdealController', dof_indices = self.arm.GetArmIndices(),
                 affine_dofs=0, simulated=True)
-
+            
         #load and activate initial controllers(change)
         #if self.controller_manager is not None:
             #self.controller_manager.request(self.controller_always_on).switch()
@@ -110,7 +111,7 @@ class FETCHRobot(Robot):
         try: 
             self.configurations.load_yaml(configurations_path)
         except IOError as e:
-            raise ValueError('Failed laoding named configurations from "{:s}".'.format(
+            raise ValueError('Failed loading named configurations from "{:s}".'.format(
                 configurations_path))
 
         #Hand configurations
@@ -205,6 +206,7 @@ class FETCHRobot(Robot):
         #     from actionlib import SimpleActionClient
         #     self._say_action_client = SimpleActionClient('say', talker.msg.SayAction)
 
+
     def CloneBindings(self, parent):
         super(FETCHRobot, self).CloneBindings(parent)
         self.arm = Cloned(parent.arm)
@@ -214,7 +216,7 @@ class FETCHRobot(Robot):
     	#Add all here (change)
 
     def _ExecuteTrajectory(self, traj, defer=False, timeout=None, period=0.01,**kwargs):
-        #print 'HELLLLLLLLOOOOOOOOOOOOOO>>>>>>>I am here<<<<<<<<<'
+        print 'HELLLLLLLLOOOOOOOOOOOOOO>>>>>>>I am here<<<<<<<<<'
         if defer is not False:
             raise RuntimeError('defer functionality was deprecated in ''personalrobotics/prpy#278')
             # Don't execute trajectories that don't have at least one waypoint.
@@ -236,14 +238,16 @@ class FETCHRobot(Robot):
             return traj
         # Verify that the trajectory is timed by checking whether the first
         # waypoint has a valid deltatime value.
-        #if not prpy.util.IsTimedTrajectory(traj):
-            #raise ValueError('Trajectory cannot be executed, it is not timed.')
+        if not prpy.util.IsTimedTrajectory(traj):
+            raise ValueError('Trajectory cannot be executed, it is not timed.')
 
         # Verify that the trajectory has non-zero duration.
         if traj.GetDuration() <= 0.0:
             logger.warning('Executing zero-length trajectory. Please update the'
                           ' function that produced this trajectory to return a'
                           ' single-waypoint trajectory.', FutureWarning)
+        
+
         traj_manipulators = self.GetTrajectoryManipulators(traj)
         controllers_manip = []
         active_controllers = []
@@ -260,10 +264,9 @@ class FETCHRobot(Robot):
         if self.arm in traj_manipulators:
             if not self.arm.IsSimulated():
                 controllers_manip.append('arm_controller')
-        else:
-            active_controllers.append(self.arm.sim_controller)
-
-	
+            else:
+                active_controllers.append(self.arm.sim_controller)
+    
 
         # load and activate controllers(change)
         #if not self.full_controller_sim:
@@ -277,8 +280,7 @@ class FETCHRobot(Robot):
 
         ##ADD HERE ALL THE CONTROLLERS (change)
         for controller in active_controllers:
-	    #print str(controller)
-            controller.SetPath(traj)
+	        controller.SetPath(traj)
 
         prpy.util.WaitForControllers(active_controllers, timeout=timeout)
         return traj
