@@ -250,8 +250,8 @@ class FETCHRobot(Robot):
             return traj
         # Verify that the trajectory is timed by checking whether the first
         # waypoint has a valid deltatime value.
-        if not prpy.util.IsTimedTrajectory(traj):
-            raise ValueError('Trajectory cannot be executed, it is not timed.')
+        #if not prpy.util.IsTimedTrajectory(traj):
+            #raise ValueError('Trajectory cannot be executed, it is not timed.')
 
         # Verify that the trajectory has non-zero duration.
         if traj.GetDuration() <= 0.0:
