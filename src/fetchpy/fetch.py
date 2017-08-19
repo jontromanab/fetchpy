@@ -92,7 +92,7 @@ def initialize(robot_xml = None, env_path = None, viewer = 'rviz',sim = True, **
 		dof_indices, dof_values = robot.configurations.get_configuration('relaxed_home')
 		robot.SetDOFValues(dof_values, dof_indices)
 
-	#Start by attempting to load or_rviz.
+	#Only two viewers are supported. If no viewer is mentioned it will default to rviz. Otherwise --viewer qtcoin
 	viewers = ['qtcoin','rviz']
 	if viewer is None:
 		viewer = 'rviz'
