@@ -1,0 +1,5 @@
+configurations:
+    relaxed_home:
+        arm:  [ 5.65, -1.76, -0.26,  1.96, -1.15 , 0.87, -1.43 ]
+        
+    
