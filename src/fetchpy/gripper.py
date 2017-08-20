@@ -2,7 +2,6 @@ import numpym openravepy
 from prpy import utils
 from prpy.base.endeffector import EndEffector
 from prpy.controller import OrController
-
 from ros_control_client_py import SetPositionFuture
 
 
@@ -67,6 +66,81 @@ class GripperCommandController(OrController):
 
 	def IsDone(self):
 		return self._current_cmd is None or self._current_cmd.done()
+
+
+class Gripper(EndEffector):
+	def __init__(self, sim, manipulator, namespace):
+		"""End effector wrapper for fetch gripper
+		@param sim: whether the hand is simulated
+		@manipulator: manipulator the gripper is attached to arm/arm_torso
+		"""
+		EndEffector.__init__(self,manipulator)
+		self.simulated = sim
+
+		#Setting closing direction. Hope we dont need it as the gripper is parallel
+		gripper_indices = manipulator.GetGripperIndices()
+		closing_direction = numpy.zeros(len(gripper_indices))
+		finger_indices = self.GetFingerIndices()
+
+		for i, dof_index in enumerate(gripper_indices):
+			if dof_index in finger_indices:
+				closing_direction[i] = 1.
+
+		manipulator.SetChuckingDirection(closing_direction)
+
+		robot = self.manipulator.GetRobot()
+		env = robot.GetEnv()
+
+		#Controller Setup
+		self.namespace = namespace
+		if not sim:
+			self.controller = GripperCommandController('gripper_controller')
+		else:
+			self.controller = robot.AttachController(name = self.GetName(),
+			args = 'IdealController', dof_indices = self.getIndices(), affine_dofs = 0,
+			simulated = sim )
+
+	def MoveHand(self, value = None, timeout = None):
+		"""Change the gripper joint with the value
+		@param value: desired value of the joint
+		"""
+		curr_pos = self.GetDOFValues()
+		self.controller.SetDesired(value)
+		util.WaitForControllers([self.controller], timeout=timeout)
+
+	def OpenHand(self,timeout = None):
+		self.controller.SetDesired(0.0)
+		util.WaitForControllers([self.controller], timeout=timeout)
+
+	def CloseHand(self,timeout = None):
+		self.controller.SetDesired(0.7)
+		util.WaitForControllers([self.controller], timeout=timeout)
+
+	def GetJointState(self):
+		self.robot.SetActiveDOFs([robot.GetJoint(name).GetDOFIndex() for name in self.GetJointNames])
+		values = self.robot.GetActiveDOFValues()
+		return values[0]
+
+
+	def GetJointNames(self):
+		jointnames=['l_gripper_finger_joint','r_gripper_finger_joint']
+		return jointnames
+
+	def getFingerIndices(self):
+		"""Gets the DOF indices of the fingers.
+		These are returned in the order: [l_joint, r_joint]
+		@return DOF indices of the fingers
+		"""
+		return [self._GetJointFromName(name).GetDOFIndex() for name in self.GetJointNames]
+
+	def getIndices(self):
+		return self.getFingerIndices()
+
+	def _GetJointFromName(self, name):
+		robot = self.manipulator.GetRobot()
+		full_name = '/{:s}/{:s}'.format(self.manipulator.GetName(), name)
+		return robot.GetJoint(full_name)
+
 
 		
 
