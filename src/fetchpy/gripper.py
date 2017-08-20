@@ -141,7 +141,6 @@ class GRIPPER(EndEffector):
 		if self.simulated:
 			robot = self.manipulator.GetRobot()
 			p = openravepy.KinBody.SaveParameters
-
 			with robot.CreateRobotStateSaver(p.ActiveDOF | p.ActiveManipulator):
 				self.manipulator.SetActive()
 				robot.task_manipulation.ReleaseFingers()
@@ -153,7 +152,6 @@ class GRIPPER(EndEffector):
 		if self.simulated:
 			robot = self.manipulator.GetRobot()
 			p = openravepy.KinBody.SaveParameters
-
 			with robot.CreateRobotStateSaver(p.ActiveDOF | p.ActiveManipulator):
 				self.manipulator.SetActive()
 				robot.task_manipulation.CloseFingers()
