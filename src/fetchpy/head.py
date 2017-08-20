@@ -20,7 +20,7 @@ from trajectory_msgs.msg import (JointTrajectoryPoint, JointTrajectory)
 from geometry_msgs.msg import (PointStamped, Vector3)
 
 class PointHeadClient(object):
-	def __init(self, ns, controller_name, timeout = 0.0):
+	def __init__(self, ns, controller_name, timeout = 0.0):
 		self.log = logging.getLogger(__name__)
 		as_name = ns + '/' + controller_name + '/point_head'
 		self._client = actionlib.SimpleActionClient(as_name,PointHeadAction,)
@@ -38,6 +38,7 @@ class PointHeadClient(object):
 		point_st_msg.point.z = point_value[2]
 		goal_msg.target = point_st_msg
 		self._client.send_goal(goal_msg)
+
 
 class PointHeadController(OrController):
 	def __init__(self,namespace, controller_name, simulated = False, timeout = 10.0):
@@ -59,12 +60,6 @@ class PointHeadController(OrController):
 
 	def IsDone(self):
 		return self._current_cmd is None or self._current_cmd.done()
-
-
-
-
-
-
 
 
 class FollowJointTrajectoryController(RewdOrController):
@@ -106,10 +101,16 @@ class HEAD(ARM):
 		if not sim:
 			self.controller = FollowJointTrajectoryController(self,'',
 				'head_controller', self.GetJointNames())
+			self.look_at_controller = PointHeadController('','head_controller')
 		else:
 			self.controller = self.robot.AttachController(name=self.GetName(),
 				args = 'IdealController', dof_indices = self.GetIndices(),
 				affine_dofs = 0, simulated = sim)
+
+	def LookAt(self, value, timeout = None):
+		self.look_at_controller.SetDesired(value)
+		util.WaitForControllers([self.look_at_controller], timeout=timeout)
+
 
 	def GetJointNames(self):
 		jointnames = ['head_pan_joint','head_tilt_joint']
