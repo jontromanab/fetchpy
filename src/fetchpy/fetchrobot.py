@@ -92,6 +92,7 @@ class FETCHRobot(Robot):
         self.gripper = self.arm.GetEndEffector()
         self.hand = self.gripper
         self.head = self.arm.GetEndEffector()
+        
 
         #####ADD REST HERE (change)
         self.manipulators = [self.arm, self.arm_torso]
@@ -128,6 +129,7 @@ class FETCHRobot(Robot):
         import os.path
         self.configurations.add_group('arm',self.arm.GetArmIndices())
         self.configurations.add_group('gripper',self.gripper.GetIndices())
+        self.configurations.add_group('head',self.head.GetIndices())
 
         configurations_path = FindCatkinResource('fetchpy', 'config/configurations.yaml')
 
@@ -151,6 +153,19 @@ class FETCHRobot(Robot):
                     gripper_configurations_path))
         else:
             logger.warning('Unrecognized hand class. Not loading named configurations.')
+
+        #Head configurations
+        self.head.configurations = ConfigurationLibrary()
+        self.head.configurations.add_group('head', self.head.GetIndices())
+        if isinstance(self.head, HEAD):
+            head_configurations_path = FindCatkinResource('fetchpy', 'config/head_preshapes.yaml')
+            try:
+                self.configurations.load_yaml(head_configurations_path)
+            except IOError as e:
+                raise ValueError('Failed loading named configurations from "{:s}".'.format(
+                    head_configurations_path))
+        else:
+            logger.warning('Unrecognized HEAD class. Not loading named configurations.')
 
 
 
@@ -249,6 +264,8 @@ class FETCHRobot(Robot):
         self.manipulators = [self.arm]
         self.gripper = Cloned(parent.arm.GetEndEffector())
         self.hand = self.gripper
+        # self.head = Cloned(parent.arm.GetEndEffector())
+        # self.pan_tilt = self.head
         self.planner = parent.planner
 
     	#Add all here (change)

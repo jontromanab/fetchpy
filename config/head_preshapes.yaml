@@ -1,0 +1,11 @@
+configurations:
+    straight:
+        head: [0.0 , 0.0]
+    look_down:
+        head: [0.0, 1.3]
+    look_up:
+        head: [0.0, -0.5]
+    look_right:
+        head: [-1.57, 0.0]
+    look_left:
+        head: [1.57, 0.0]

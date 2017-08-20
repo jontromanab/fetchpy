@@ -8,7 +8,6 @@ from prpy.controllers import RewdOrController
 from ros_control_client_py import SetPositionFuture
 from arm import ARM
 
-
 import logging
 import rospy
 import actionlib
@@ -61,6 +60,9 @@ class HEAD(ARM):
 			self.controller = self.robot.AttachController(name=self.GetName(),
 				args = 'IdealController', dof_indices = self.GetIndices(),
 				affine_dofs = 0, simulated = sim)
+
+
+
 			
 		
 
@@ -125,9 +127,19 @@ class HEAD(ARM):
 			self.controller.SetPath(traj)
 			util.WaitForControllers([self.controller], timeout = timeout)
 
-	# def MoveToNamedConfigurations(self, name, timeout=None):
-	# 	try:
-			
+	def MoveToNamedConfigurations(self, name, timeout=None):
+		try:
+			configurations = self.robot.configurations
+		except AttributeError:
+			raise PlanningError('{:s} does not have a table of named'
+				' configurations.'.format(robot))
+		try:
+			dof_indices, dof_values = self.robot.configurations.get_configuration(name)
+		except KeyError:
+			raise PlanningError('{0:s} does not have named configuration "{1:s}".'
+				.format(self.robot, name))
+		self.MoveTo(dof_values)
+
 			
 
 
