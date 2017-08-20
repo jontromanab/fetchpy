@@ -4,7 +4,7 @@ from prpy import util
 from prpy.base.endeffector import EndEffector
 from prpy.base.manipulator import Manipulator
 from prpy.planning import PlanningError
-from prpy.controllers import RewdOrController
+from prpy.controllers import (RewdOrController, OrController,)
 from ros_control_client_py import SetPositionFuture
 from arm import ARM
 
@@ -12,8 +12,60 @@ import logging
 import rospy
 import actionlib
 
-from control_msgs.msg import (FollowJointTrajectoryAction, FollowJointTrajectoryGoal)
+from control_msgs.msg import (FollowJointTrajectoryAction, 
+	FollowJointTrajectoryGoal,
+	PointHeadAction, 
+	PointHeadGoal)
 from trajectory_msgs.msg import (JointTrajectoryPoint, JointTrajectory)
+from geometry_msgs.msg import (PointStamped, Vector3)
+
+class PointHeadClient(object):
+	def __init(self, ns, controller_name, timeout = 0.0):
+		self.log = logging.getLogger(__name__)
+		as_name = ns + '/' + controller_name + '/point_head'
+		self._client = actionlib.SimpleActionClient(as_name,PointHeadAction,)
+		if not self._client.wait_for_server(rospy.Duration(timeout)):
+			raise Exception('Could not connect to the action server {}'
+				.format(as_name))
+
+	def execute(self, point_value):
+		goal_msg = PointHeadGoal()
+		point_st_msg = PointStamped()
+		point_st_msg.header.frame_id = "/base_link"
+		point_st_msg.header.stamp = rospy.Time.now()
+		point_st_msg.point.x = point_value[0]
+		point_st_msg.point.y = point_value[1]
+		point_st_msg.point.z = point_value[2]
+		goal_msg.target = point_st_msg
+		self._client.send_goal(goal_msg)
+
+class PointHeadController(OrController):
+	def __init__(self,namespace, controller_name, simulated = False, timeout = 10.0):
+		if simulated:
+			raise NotImplementedError('Simulation not supported here')
+		self.logger = logging.getLogger(__name__)
+		self.namespace = namespace
+		self.controller_name = controller_name
+		self.controller_client = PointHeadClient(namespace, controller_name, timeout)
+		self._current_cmd = None
+		self.logger.info('Point Head controller {}/{} initialized'
+			.format(namespace, controller_name))
+
+	def SetDesired(self, point):
+		if not self.IsDone():
+			self.logger.warning('Point Head Controller is already in progress. You should wait')
+		self.logger.info('Looking at: {}'.format(point))
+		self._current_cmd = self.controller_client.execute(point)
+
+	def IsDone(self):
+		return self._current_cmd is None or self._current_cmd.done()
+
+
+
+
+
+
+
 
 class FollowJointTrajectoryController(RewdOrController):
 	def __init__(self, robot, namespace, controller_name, joint_names, simulated = False):
