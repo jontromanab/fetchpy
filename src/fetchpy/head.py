@@ -41,9 +41,7 @@ class FollowJointTrajectoryController(RewdOrController):
 		return (self.current_trajectory is None or
 			self.current_trajectory.done())
 
-		
-
-
+	
 class HEAD(ARM):
 	def __init__(self, robot, sim, namespace):
 		self.simulated = sim
@@ -60,11 +58,6 @@ class HEAD(ARM):
 			self.controller = self.robot.AttachController(name=self.GetName(),
 				args = 'IdealController', dof_indices = self.GetIndices(),
 				affine_dofs = 0, simulated = sim)
-
-
-
-			
-		
 
 	def GetJointNames(self):
 		jointnames = ['head_pan_joint','head_tilt_joint']
