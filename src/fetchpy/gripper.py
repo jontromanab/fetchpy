@@ -86,7 +86,7 @@ class GRIPPER(EndEffector):
 
 		for i, dof_index in enumerate(gripper_indices):
 			if dof_index in finger_indices:
-				closing_direction[i] = 1.
+				closing_direction[i] = -1.
 
 		manipulator.SetChuckingDirection(closing_direction)
 
@@ -104,7 +104,7 @@ class GRIPPER(EndEffector):
 
 
 
-	def MoveHand(self, value = None, timeout = None):
+	def MoveHand(self, value, timeout = None):
 		"""Change the gripper joint with the value
 		@param value: desired value of the joint
 		"""
@@ -138,10 +138,29 @@ class GRIPPER(EndEffector):
 
 
 	def OpenHand(self,timeout = None):
-		self.MoveHand(value = 0.1)
+		if self.simulated:
+			robot = self.manipulator.GetRobot()
+			p = openravepy.KinBody.SaveParameters
+
+			with robot.CreateRobotStateSaver(p.ActiveDOF | p.ActiveManipulator):
+				self.manipulator.SetActive()
+				robot.task_manipulation.ReleaseFingers()
+			util.WaitForControllers([self.controller], timeout = timeout)
+		else:
+			self.MoveHand(value = 0.1)
 
 	def CloseHand(self,timeout = None):
-		self.MoveHand(value = 0.0)
+		if self.simulated:
+			robot = self.manipulator.GetRobot()
+			p = openravepy.KinBody.SaveParameters
+
+			with robot.CreateRobotStateSaver(p.ActiveDOF | p.ActiveManipulator):
+				self.manipulator.SetActive()
+				robot.task_manipulation.CloseFingers()
+			util.WaitForControllers([self.controller], timeout = timeout)
+		else:
+			self.MoveHand(value = 0.0)
+		
 
 	def GetJointState(self):
 		jointnames=(['l_gripper_finger_joint','r_gripper_finger_joint'])
