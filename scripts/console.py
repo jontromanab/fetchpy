@@ -37,6 +37,7 @@ if __name__ == "__main__":
 	if args.debug:
 		openravepy.RaveSetDebugLevel(openravepy.DebugLevel.Debug)
 
+	
 	fetchpy_args = {'sim':args.sim,'viewer':args.viewer,'robot_xml':args.robot_xml,
 	'env_path':args.env_xml,'base_sim':args.base_sim,'perception_sim': args.perception_sim}
 

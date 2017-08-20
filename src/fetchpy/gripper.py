@@ -1,6 +1,7 @@
 import numpy, openravepy
 from prpy import util
 from prpy.base.endeffector import EndEffector
+from prpy.planning import PlanningError
 from prpy.controllers import OrController
 from ros_control_client_py import SetPositionFuture
 
@@ -107,8 +108,8 @@ class GRIPPER(EndEffector):
 		"""Change the gripper joint with the value
 		@param value: desired value of the joint
 		"""
-		if value>0.07 or value<0.0001:
-			self.logger.warning('The range is 0.0001 and 0.07. try to provide value between this range')
+		if value>0.1 or value<0.0:
+			self.logger.warning('The range is 0.0 and 0.1. try to provide value between this range')
 		if self.simulated:
 			self.controller.SetDesired([value, value])
 			util.WaitForControllers([self.controller], timeout=timeout)
@@ -116,9 +117,28 @@ class GRIPPER(EndEffector):
 			self.controller.SetDesired(value)
 			util.WaitForControllers([self.controller], timeout=timeout)
 
+	def MoveToNamedConfiguration(self, name, timeout = None):
+		"""Accesses the table provided in gripper_preshapes.yaml file
+		"""
+		try:
+			configurations = self.robot.configurations
+		except AttributeError:
+			raise PlanningError('{:s} does not have a table of named'
+				' configurations.'.format(robot))
+
+		try:
+			dof_indices, dof_values = self.robot.configurations.get_configuration(name)
+		except KeyError:
+			raise PlanningError('{0:s} does not have named configuration "{1:s}".'.format(self.robot, name))
+
+		if not dof_values[0] == dof_values[1]:
+			raise PlanningError('Both the values should be same')
+
+		self.MoveHand(value = dof_values[0])
+
 
 	def OpenHand(self,timeout = None):
-		self.MoveHand(value = 0.07)
+		self.MoveHand(value = 0.1)
 
 	def CloseHand(self,timeout = None):
 		self.MoveHand(value = 0.0)

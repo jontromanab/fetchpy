@@ -17,7 +17,7 @@ from .fetchrobot import FETCHRobot
 
 logger = logging.getLogger('fetchpy')
 
-def initialize(robot_xml = None, env_path = None, viewer = 'rviz',sim = False, **kw_args):
+def initialize(robot_xml = None, env_path = None, viewer = 'rviz',sim = True, **kw_args):
 	prpy.logger.initialize_logging()
 
 

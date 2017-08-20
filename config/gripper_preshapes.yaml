@@ -1,7 +1,9 @@
 configurations:
     closed:
-        gripper: [0.0]
+        gripper: [0.0 , 0.0]
     open:
-        gripper: [0.7]
+        gripper: [0.1, 0.1]
     middle:
-        gripper: [0.3]
+        gripper: [0.05, 0.05]
+    not_same:
+        gripper: [0.3, 0.1]
