@@ -1,12 +1,14 @@
-import numpym openravepy
-from prpy import utils
+import numpy, openravepy
+from prpy import util
 from prpy.base.endeffector import EndEffector
-from prpy.controller import OrController
+from prpy.controllers import OrController
 from ros_control_client_py import SetPositionFuture
 
 
 import logging
 import rospy
+import actionlib
+from control_msgs.msg import (GripperCommandAction, GripperCommandGoal)
 
 
 
@@ -18,13 +20,9 @@ class GripperCommandClient(object):
 		@param controller_name: name of the controller
 		@type controller_name: str
 		"""
-		import rospy
-		import actionlib
-		from control_msgs.msg import (GripperCommandAction, GripperCommandGoal)
-
 		self.log = logging.getLogger(__name__)
 		as_name = ns + '/' + controller_name+'/gripper_action'
-		self.client = actionlib.SimpleActionClient(as_name, GripperCommandAction,)
+		self._client = actionlib.SimpleActionClient(as_name, GripperCommandAction,)
 		if not self._client.wait_for_server(rospy.Duration(timeout)):
 			raise Exception('Could not connect to the action server {}'.format(as_name))
 
@@ -37,12 +35,13 @@ class GripperCommandClient(object):
 		goal_msg.command.position = position
 		goal_msg.command.max_effort = 0.0
 		
-		self.log.info('Sending positionGoal: {}'.format(goal_msg))
-		action_future = SetPositionFuture(position)
-		action_future._handle = self._client.send_goal(goal_msg,
-			transition_cb=action_future.on_transition,
-			feedback_cb=action_future.on_feedback)
-		return action_future
+		#self.log.info('Sending positionGoal: {}'.format(goal_msg))
+		#action_future = SetPositionFuture(position)
+		#action_future._handle = 
+		self._client.send_goal(goal_msg)
+			#transition_cb=action_future.on_transition,
+			#feedback_cb=action_future.on_feedback)
+		#return action_future
 
 
 class GripperCommandController(OrController):
@@ -68,7 +67,7 @@ class GripperCommandController(OrController):
 		return self._current_cmd is None or self._current_cmd.done()
 
 
-class Gripper(EndEffector):
+class GRIPPER(EndEffector):
 	def __init__(self, sim, manipulator, namespace):
 		"""End effector wrapper for fetch gripper
 		@param sim: whether the hand is simulated
@@ -76,6 +75,8 @@ class Gripper(EndEffector):
 		"""
 		EndEffector.__init__(self,manipulator)
 		self.simulated = sim
+		self.logger = logging.getLogger(__name__)
+		
 
 		#Setting closing direction. Hope we dont need it as the gripper is parallel
 		gripper_indices = manipulator.GetGripperIndices()
@@ -88,56 +89,65 @@ class Gripper(EndEffector):
 
 		manipulator.SetChuckingDirection(closing_direction)
 
-		robot = self.manipulator.GetRobot()
-		env = robot.GetEnv()
+		self.robot = self.manipulator.GetRobot()
+		env = self.robot.GetEnv()
 
 		#Controller Setup
 		self.namespace = namespace
 		if not sim:
-			self.controller = GripperCommandController('gripper_controller')
+			self.controller = GripperCommandController('','gripper_controller')
 		else:
-			self.controller = robot.AttachController(name = self.GetName(),
-			args = 'IdealController', dof_indices = self.getIndices(), affine_dofs = 0,
+			self.controller = self.robot.AttachController(name = self.GetName(),
+			args = 'IdealController', dof_indices = self.GetIndices(), affine_dofs = 0,
 			simulated = sim )
+
+
 
 	def MoveHand(self, value = None, timeout = None):
 		"""Change the gripper joint with the value
 		@param value: desired value of the joint
 		"""
-		curr_pos = self.GetDOFValues()
-		self.controller.SetDesired(value)
-		util.WaitForControllers([self.controller], timeout=timeout)
+		if value>0.07 or value<0.0001:
+			self.logger.warning('The range is 0.0001 and 0.07. try to provide value between this range')
+		if self.simulated:
+			self.controller.SetDesired([value, value])
+			util.WaitForControllers([self.controller], timeout=timeout)
+		else:
+			self.controller.SetDesired(value)
+			util.WaitForControllers([self.controller], timeout=timeout)
+
 
 	def OpenHand(self,timeout = None):
-		self.controller.SetDesired(0.0)
-		util.WaitForControllers([self.controller], timeout=timeout)
+		self.MoveHand(value = 0.07)
 
 	def CloseHand(self,timeout = None):
-		self.controller.SetDesired(0.7)
-		util.WaitForControllers([self.controller], timeout=timeout)
+		self.MoveHand(value = 0.0)
 
 	def GetJointState(self):
-		self.robot.SetActiveDOFs([robot.GetJoint(name).GetDOFIndex() for name in self.GetJointNames])
+		jointnames=(['l_gripper_finger_joint','r_gripper_finger_joint'])
+		self.robot.SetActiveDOFs([self.robot.GetJoint(name).GetDOFIndex() for name in jointnames])
 		values = self.robot.GetActiveDOFValues()
-		return values[0]
+		return values
 
 
 	def GetJointNames(self):
-		jointnames=['l_gripper_finger_joint','r_gripper_finger_joint']
+		jointnames=(['l_gripper_finger_joint','r_gripper_finger_joint'])
 		return jointnames
 
-	def getFingerIndices(self):
+	def GetFingerIndices(self):
 		"""Gets the DOF indices of the fingers.
 		These are returned in the order: [l_joint, r_joint]
 		@return DOF indices of the fingers
 		"""
-		return [self._GetJointFromName(name).GetDOFIndex() for name in self.GetJointNames]
+		return self.manipulator.GetGripperIndices()
+		
 
-	def getIndices(self):
-		return self.getFingerIndices()
+	def GetIndices(self):
+		return self.GetFingerIndices()
 
 	def _GetJointFromName(self, name):
 		robot = self.manipulator.GetRobot()
+		print self.manipulator.GetName()
 		full_name = '/{:s}/{:s}'.format(self.manipulator.GetName(), name)
 		return robot.GetJoint(full_name)
 

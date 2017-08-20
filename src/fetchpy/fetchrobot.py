@@ -9,6 +9,7 @@ import subprocess
 
 #all the components of the robot
 from .arm import ARM
+from .gripper import GRIPPER
 
 from prpy import Cloned
 from prpy.action import ActionLibrary
@@ -87,11 +88,15 @@ class FETCHRobot(Robot):
         # Convenience attributes for accessing self components.
         self.arm = self.GetManipulator('arm')
         self.arm_torso = self.GetManipulator('arm_torso')
+        self.gripper = self.arm.GetEndEffector()
+        self.hand = self.gripper
         #####ADD REST HERE (change)
         self.manipulators = [self.arm, self.arm_torso]
 
         #Dynamically switch to self-specific subclasses.
         prpy.bind_subclass(self.arm, ARM, sim= arm_sim)
+        prpy.bind_subclass(self.gripper, GRIPPER, sim = gripper_sim, manipulator = self.arm,
+            namespace = '')
         #####ADD REST HERE(change)
 
         # Set FETCH's acceleration limits. These are not specified in URDF.
@@ -104,6 +109,8 @@ class FETCHRobot(Robot):
         # Determine always-on controllers(have to do all the controllers here)
         #arm controller
         # Set default manipulator controllers in sim only
+        if not gripper_sim:
+            self.controller_always_on.append('gripper_controller')
         if arm_sim:
             self.arm.sim_controller = self.AttachController(name=self.arm.GetName(),
                 args = 'IdealController', dof_indices = self.arm.GetArmIndices(),
@@ -128,6 +135,16 @@ class FETCHRobot(Robot):
 
         #Hand configurations
         #SOME OF THEM LIKE OPEN CLOSE GRASPING ETC. todo NOW(change)
+        self.gripper.configurations = ConfigurationLibrary()
+        self.gripper.configurations.add_group('gripper', self.gripper.GetIndices())
+        # if isinstance(self.hand, GRIPPER):
+        #     gripper_configurations_path = FindCatkinResource('fetchpy', 'config/gripper_preshapes.yaml')
+        #     try:
+        #         self.configurations.load_yaml(gripper_configurations_path)
+        #     except IOError as e:
+        #         raise ValueError('Failed loading named configurations from "{:s}".'.format(
+        #             gripper_configurations_path))
+
 
 
         #Planner.
@@ -223,12 +240,14 @@ class FETCHRobot(Robot):
         super(FETCHRobot, self).CloneBindings(parent)
         self.arm = Cloned(parent.arm)
         self.manipulators = [self.arm]
+        self.gripper = Cloned(parent.arm.GetEndEffector())
+        self.hand = self.gripper
         self.planner = parent.planner
 
     	#Add all here (change)
 
     def _ExecuteTrajectory(self, traj, defer=False, timeout=None, period=0.01,**kwargs):
-        print 'HELLLLLLLLOOOOOOOOOOOOOO>>>>>>>I am here<<<<<<<<<'
+        #print 'HELLLLLLLLOOOOOOOOOOOOOO>>>>>>>I am here<<<<<<<<<'
         if defer is not False:
             raise RuntimeError('defer functionality was deprecated in ''personalrobotics/prpy#278')
             # Don't execute trajectories that don't have at least one waypoint.

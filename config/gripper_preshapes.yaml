@@ -1,0 +1,7 @@
+configurations:
+    closed:
+        gripper: [0.0]
+    open:
+        gripper: [0.7]
+    middle:
+        gripper: [0.3]
