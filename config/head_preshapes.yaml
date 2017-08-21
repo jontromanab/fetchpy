@@ -1,5 +1,5 @@
 configurations:
-    straight:
+    look_straight:
         head: [0.0 , 0.0]
     look_down:
         head: [0.0, 1.3]

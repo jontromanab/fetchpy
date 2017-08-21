@@ -91,7 +91,8 @@ class FETCHRobot(Robot):
         self.arm_torso = self.GetManipulator('arm_torso')
         self.gripper = self.arm.GetEndEffector()
         self.hand = self.gripper
-        self.head = self.arm.GetEndEffector()
+        self.head = self.GetManipulator('head')
+        #self.head = None
         
 
         #####ADD REST HERE (change)
@@ -113,9 +114,11 @@ class FETCHRobot(Robot):
 
         # Determine always-on controllers(have to do all the controllers here)
         #arm controller
-        # Set default manipulator controllers in sim only
+        # Set default manipulator controllers in sim only (change)
         if not gripper_sim:
             self.controller_always_on.append('gripper_controller')
+        if not head_sim:
+            self.controller_always_on.append('head_controller')
         if arm_sim:
             self.arm.sim_controller = self.AttachController(name=self.arm.GetName(),
                 args = 'IdealController', dof_indices = self.arm.GetArmIndices(),
@@ -262,10 +265,12 @@ class FETCHRobot(Robot):
         super(FETCHRobot, self).CloneBindings(parent)
         self.arm = Cloned(parent.arm)
         self.manipulators = [self.arm]
-        self.gripper = Cloned(parent.arm.GetEndEffector())
-        self.hand = self.gripper
-        # self.head = Cloned(parent.arm.GetEndEffector())
+        self.hand = Cloned(parent.arm.GetEndEffector())
+        self.gripper = self.hand
+        #self.gripper = Cloned(parent.arm)
+        #self.head = Cloned(parent.arm.GetEndEffector())
         # self.pan_tilt = self.head
+        self.head = Cloned(parent.head)
         self.planner = parent.planner
 
     	#Add all here (change)

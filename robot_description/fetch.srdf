@@ -27,26 +27,28 @@
       <chain base_link="base_link" tip_link="wrist_roll_link"/>
     </group>
 
+    <group name="head">
+      <chain base_link="head_pan_link" tip_link="head_tilt_link"/>
+    </group>
 
-    <!--group name="arm_with_torso">
-        <joint name="torso_lift_joint" />
-        <joint name="shoulder_pan_joint" />
-        <joint name="shoulder_lift_joint" />
-        <joint name="upperarm_roll_joint" />
-        <joint name="elbow_flex_joint" />
-        <joint name="forearm_roll_joint" />
-        <joint name="wrist_flex_joint" />
-        <joint name="wrist_roll_joint" />
-    </group-->
+
     <group name="gripper">
 	<link name="gripper_link" />
         <link name="l_gripper_finger_link" />
         <link name="r_gripper_finger_link" />
     </group>
+
+    <group name="head_full">
+	<link name="head_camera_link" />
+    </group>
+
+    
     <!--END EFFECTOR: Purpose: Represent information about an end effector.-->
     <end_effector group="gripper" name="arm" parent_group="arm" parent_link="wrist_roll_link"/>
 
     <end_effector group="gripper" name="arm_torso" parent_group="arm_torso" parent_link="wrist_roll_link"/>
+
+    <end_effector group="head_full" name="head" parent_group="head" parent_link="head_tilt_link"/>
 
 
     <!--end_effector name="gripper" parent_link="wrist_roll_link" group="gripper" parent_group="arm"/-->
