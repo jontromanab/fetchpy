@@ -173,7 +173,7 @@ class HEAD(ARM):
 			self.controller.SetPath(traj)
 			util.WaitForControllers([self.controller], timeout = timeout)
 
-	def MoveToNamedConfigurations(self, name, timeout=None):
+	def MoveToNamedConfiguration(self, name, timeout=None):
 		try:
 			configurations = self.robot.configurations
 		except AttributeError:
