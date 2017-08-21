@@ -11,6 +11,7 @@ import subprocess
 from .arm import ARM
 from .gripper import GRIPPER
 from .head import HEAD
+from .base import BASE
 
 from prpy import Cloned
 from prpy.action import ActionLibrary
@@ -61,7 +62,6 @@ class FETCHRobot(Robot):
         gripper_sim and head_sim)
 
         if not self.full_controller_sim:
-            #print ' I am HERE'
             import rospy
             from ros_control_client_py import(ControllerManagerClient,
                 JointStateClient,)
@@ -83,7 +83,6 @@ class FETCHRobot(Robot):
             
             #update openrave state from /joint_states
             self._jointstate_client = JointStateClient(self, topic_name='/joint_states')
-            #self.controller_manager = ControllerManagerClient()
             self.controller_always_on.append('joint_state_controller')
 
         # Convenience attributes for accessing self components.
@@ -92,7 +91,7 @@ class FETCHRobot(Robot):
         self.gripper = self.arm.GetEndEffector()
         self.hand = self.gripper
         self.head = self.GetManipulator('head')
-        #self.head = None
+        
         
 
         #####ADD REST HERE (change)
@@ -103,6 +102,7 @@ class FETCHRobot(Robot):
         prpy.bind_subclass(self.gripper, GRIPPER, sim = gripper_sim, manipulator = self.arm,
             namespace = '')
         prpy.bind_subclass(self.head, HEAD, robot=self, sim = head_sim, namespace = '')
+        self.base = BASE(sim = base_sim, robot = self)
         #####ADD REST HERE(change)
 
         # Set FETCH's acceleration limits. These are not specified in URDF.

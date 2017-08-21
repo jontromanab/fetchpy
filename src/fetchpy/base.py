@@ -1,4 +1,4 @@
-import numpy, openravepy, loggin
+import numpy, openravepy, logging
 from prpy.base import MobileBase
 import prpy, time
 from prpy.controllers import OrController
@@ -43,7 +43,7 @@ class BaseVelocityController(OrController):
 		self._current_cmd = self.Publisher.execute(vel)
 
 	def IsDone(self):
-		return self._current_cmd is None ir self._current_cmd.done()
+		return self._current_cmd is None or self._current_cmd.done()
 
 
 class BASE(MobileBase):
