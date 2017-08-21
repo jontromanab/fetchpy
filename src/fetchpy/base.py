@@ -86,7 +86,7 @@ class BASE(MobileBase):
 				is_done = prpy.util.WaitForControllers([self.controller], timeout=
 					timeout)
 
-	def GoTo(self, vel, execute = True, timeout = None, **kwargs):
+	def Move(self, vel, execute = True, timeout = None, **kwargs):
 		self.Rotate(vel[1])
 		self.Forward(vel[0])
 
