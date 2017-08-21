@@ -16,12 +16,8 @@ class BaseVelocityPublisher(object):
 
 	def execute(self, vel):
 		goal_msg = Twist()
-		lin = Vector3
-		lin.x = vel[0]
-		ang = Vector3
-		ang.z = vel[1]
-		goal_msg.linear = lin
-		goal_msg.angular = ang
+		goal_msg.linear.x = vel[0]
+		goal_msg.angular.z = vel[1]
 		self._pub.publish(goal_msg)
 
 class BaseVelocityController(OrController):
@@ -31,7 +27,7 @@ class BaseVelocityController(OrController):
 		self.logger = logging.getLogger(__name__)
 		self.namespace = namespace
 		self.controller_name = controller_name
-		self.publisher = BaseVelocityPublisher(namespace, controller_name, timeout)
+		self.Publisher = BaseVelocityPublisher(namespace, controller_name, timeout)
 		self._current_cmd = None
 		self.logger.info('Base velocity controller {}/{} initialized'
 			.format(namespace,controller_name))
@@ -87,8 +83,9 @@ class BASE(MobileBase):
 					timeout)
 
 	def Move(self, vel, execute = True, timeout = None, **kwargs):
-		self.Rotate(vel[1])
-		self.Forward(vel[0])
+		self.controller.SetDesired(vel)
+		is_done = prpy.util.WaitForControllers([self.controller], timeout=
+					timeout)
 
 	def DriveAlongVector(self, direction, goal_pos):
 		"""

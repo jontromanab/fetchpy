@@ -119,6 +119,8 @@ class FETCHRobot(Robot):
             self.controller_always_on.append('gripper_controller')
         if not head_sim:
             self.controller_always_on.append('head_controller')
+        if not base_sim:
+            self.controller_always_on.append('base_controller')
         if arm_sim:
             self.arm.sim_controller = self.AttachController(name=self.arm.GetName(),
                 args = 'IdealController', dof_indices = self.arm.GetArmIndices(),
