@@ -98,7 +98,8 @@ class FETCHRobot(Robot):
         self.manipulators = [self.arm, self.arm_torso]
 
         #Dynamically switch to self-specific subclasses.
-        prpy.bind_subclass(self.arm, ARM, sim= arm_sim)
+        prpy.bind_subclass(self.arm, ARM, sim= arm_sim, namespace = 'arm')
+        prpy.bind_subclass(self.arm_torso, ARM, sim = arm_torso_sim, namespace = 'arm_torso')
         prpy.bind_subclass(self.gripper, GRIPPER, sim = gripper_sim, manipulator = self.arm,
             namespace = '')
         prpy.bind_subclass(self.head, HEAD, robot=self, sim = head_sim, namespace = '')
@@ -108,6 +109,7 @@ class FETCHRobot(Robot):
         # Set FETCH's acceleration limits. These are not specified in URDF.
         accel_limits = self.GetDOFAccelerationLimits()
         accel_limits[self.arm.GetArmIndices()] = [2.] * self.arm.GetArmDOF()
+        accel_limits[self.arm_torso.GetArmIndices()] = [2.] * self.arm_torso.GetArmDOF()
         #get acceleration limits and set them here(change)
         self.SetDOFAccelerationLimits(accel_limits)
 
@@ -125,14 +127,16 @@ class FETCHRobot(Robot):
             self.arm.sim_controller = self.AttachController(name=self.arm.GetName(),
                 args = 'IdealController', dof_indices = self.arm.GetArmIndices(),
                 affine_dofs=0, simulated=True)
-            
-        #load and activate initial controllers(change)
-        #if self.controller_manager is not None:
-            #self.controller_manager.request(self.controller_always_on).switch()
+        if arm_torso_sim:
+            self.arm_torso.sim_controller = self.AttachController(name=self.arm_torso.GetName(),
+                args = 'IdealController', dof_indices = self.arm_torso.GetArmIndices(),
+                affine_dofs=0, simulated=True)
+
 
         # Support for named configurations.(change)
         import os.path
         self.configurations.add_group('arm',self.arm.GetArmIndices())
+        #self.configurations.add_group('arm_torso',self.arm.GetArmIndices())
         self.configurations.add_group('gripper',self.gripper.GetIndices())
         self.configurations.add_group('head',self.head.GetIndices())
 
@@ -268,12 +272,11 @@ class FETCHRobot(Robot):
     def CloneBindings(self, parent):
         super(FETCHRobot, self).CloneBindings(parent)
         self.arm = Cloned(parent.arm)
-        self.manipulators = [self.arm]
+        self.arm_torso = Cloned(parent.arm_torso)
+        self.manipulators = [self.arm, self.arm_torso]
         self.hand = Cloned(parent.arm.GetEndEffector())
         self.gripper = self.hand
-        #self.gripper = Cloned(parent.arm)
-        #self.head = Cloned(parent.arm.GetEndEffector())
-        # self.pan_tilt = self.head
+        
         self.head = Cloned(parent.head)
         self.planner = parent.planner
         self.base_planner = parent.base_planner
@@ -291,6 +294,11 @@ class FETCHRobot(Robot):
         cspec = traj.GetConfigurationSpecification()
         needs_base = prpy.util.HasAffineDOFs(cspec)
         needs_joints = prpy.util.HasJointDOFs(cspec)
+
+        print prpy.util.GetTrajectoryIndices(traj)
+
+
+
         if needs_base and needs_joints:
             raise ValueError('Trajectories with affine and joint DOFs are not supported')
 
@@ -326,11 +334,20 @@ class FETCHRobot(Robot):
         #         logger.warning('The head is currently disabled under ros_control.')
 
         # logic to determine which controllers are needed(change)
+        print traj_manipulators
         if self.arm in traj_manipulators:
+            print 'ARM IS IN'
             if not self.arm.IsSimulated():
                 controllers_manip.append('arm_controller')
             else:
                 active_controllers.append(self.arm.sim_controller)
+
+        if self.arm_torso in traj_manipulators:
+            print 'ARM_TORSO IS IN'
+            if not self.arm_torso.IsSimulated():
+                controllers_manip.append('arm_with_torso_controller')
+            else:
+                active_controllers.append(self.arm_torso.sim_controller)
     
 
         # load and activate controllers(change)
@@ -339,9 +356,14 @@ class FETCHRobot(Robot):
 
         # repeat logic and actually construct controller clients
         # now that we've activated them on the robot
+
         if 'arm_controller' in controllers_manip:
             active_controllers.append(RewdOrTrajectoryController(self, '',
                 'arm_controller',self.arm.GetJointNames()))
+
+        if 'arm_with_torso_controller' in controllers_manip:
+            active_controllers.append(RewdOrTrajectoryController(self, '',
+                'arm_with_torso_controller',self.arm_torso.GetJointNames()))
 
         if needs_base:
             if(hasattr(self,'base') and hasattr(self.base,'controller') and
@@ -351,10 +373,12 @@ class FETCHRobot(Robot):
             logger.warning('Trajectory includes the base, but no base controller is'
                 'available. Is self.base.controller set?')
 
+        
+
 
         ##ADD HERE ALL THE CONTROLLERS (change)
         for controller in active_controllers:
-	        controller.SetPath(traj)
+            controller.SetPath(traj)
 
         prpy.util.WaitForControllers(active_controllers, timeout=timeout)
         return traj

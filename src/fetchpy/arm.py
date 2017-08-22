@@ -8,11 +8,12 @@ from prpy.base.manipulator import Manipulator
 logger = logging.getLogger('arm')
 
 class ARM(Manipulator):
-	def  __init__(self, sim, iktype = openravepy.IkParameterization.Type.Transform6D):
+	def  __init__(self, sim, namespace='',
+		iktype = openravepy.IkParameterization.Type.Transform6D):
 		Manipulator.__init__(self)
 		self.simulated = sim
 		self._iktype = iktype
-		#self.namespace = namespace
+		self.namespace = namespace
 
 		if iktype is not None:
 			self._SetupIK(iktype)
@@ -24,14 +25,17 @@ class ARM(Manipulator):
 		return self.simulated
 
 	def GetJointNames(self):
-		return ['/' +j for j in 
-		['shoulder_pan_joint',
+		jointnames = ['shoulder_pan_joint',
 		 'shoulder_lift_joint',
 		 'upperarm_roll_joint',
 		 'elbow_flex_joint',
 		 'forearm_roll_joint',
 		 'wrist_flex_joint',
-		 'wrist_roll_joint']]
+		 'wrist_roll_joint']
+		if self.namespace == 'arm_torso':
+			jointnames.insert(0,'torso_lift_joint')
+
+		return jointnames
 
 	def CloneBindings(self, parent):
 		Manipulator.CloneBindings(self, parent)
@@ -46,8 +50,15 @@ class ARM(Manipulator):
 		robot = self.GetRobot()
 		self.ikmodel = InverseKinematicsModel(robot=robot, manip=self,iktype=iktype)
 		if not self.ikmodel.load():
-			self.ikmodel.generate(iktype=iktype, precision=4,freeindices=[self.GetIndices()[2]])
-			self.ikmodel.save()
+			if(self.namespace == 'arm'):
+				self.ikmodel.generate(iktype=iktype, precision=4,
+					freeindices=[self.GetIndices()[3]])
+				self.ikmodel.save()
+			else:
+				self.ikmodel.generate(iktype=iktype, precision=4,
+					freeindices=[self.GetIndices()[4],self.GetIndices()[3]])
+				self.ikmodel.save()
+
 
 	def SetStiffnes(self,stiffness):
 		raise NotImplementedError('Not Implemented yet.'
