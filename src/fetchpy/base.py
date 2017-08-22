@@ -2,6 +2,7 @@ import numpy, openravepy, logging
 from prpy.base import MobileBase
 import prpy, time
 from prpy.controllers import OrController
+from openravepy import *
 
 import rospy
 from geometry_msgs.msg import (Twist, Vector3)
@@ -51,9 +52,11 @@ class BASE(MobileBase):
 		MobileBase.__init__(self, sim = sim, robot = robot)
 		self.simulated = sim
 		self.logger = logging.getLogger(__name__)
+		self.robot = robot
 
 		if not self.simulated:
 			self.controller = BaseVelocityController('','base_controller')
+			
 		else:
 			self.controller = robot.AttachController(name = robot.GetName(),
 				args='NavigationController {0:s} {1:s}'.format('fetchpy', 
