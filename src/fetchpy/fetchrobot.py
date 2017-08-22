@@ -215,6 +215,8 @@ class FETCHRobot(Robot):
 
         #Base Planning
         #DO WE ACTUALLY NEED THIS? HOPEFULLY NOT(change)
+        self.sbpl_planner = SBPLPlanner()
+        self.base_planner = self.sbpl_planner
 
 
         #Create action library(change)
@@ -274,6 +276,7 @@ class FETCHRobot(Robot):
         # self.pan_tilt = self.head
         self.head = Cloned(parent.head)
         self.planner = parent.planner
+        self.base_planner = parent.base_planner
 
     	#Add all here (change)
 
@@ -339,6 +342,15 @@ class FETCHRobot(Robot):
         if 'arm_controller' in controllers_manip:
             active_controllers.append(RewdOrTrajectoryController(self, '',
                 'arm_controller',self.arm.GetJointNames()))
+
+        if needs_base:
+            if(hasattr(self,'base') and hasattr(self.base,'controller') and
+                self.base.controller is not None):
+                active_controllers.append(self.base.controller)
+        else:
+            logger.warning('Trajectory includes the base, but no base controller is'
+                'available. Is self.base.controller set?')
+
 
         ##ADD HERE ALL THE CONTROLLERS (change)
         for controller in active_controllers:
