@@ -10,6 +10,7 @@ if os.environ.get('ROS_DISTRO', 'hydro')[0] <= 'f':
     roslib.load_manifest('fetchpy')
 
 import argparse, fetchpy, openravepy
+from openravepy import *
 
 
 if __name__ == "__main__":
@@ -49,6 +50,14 @@ if __name__ == "__main__":
     	    fetchpy_args['base_sim'] = args.sim
 
         env, robot = fetchpy.initialize(**fetchpy_args)
+        viewer2 = env.GetViewer()
+        viewer2.SetCamera([[ 0.49780947,  0.51386864, -0.69865925,  2.06191206],
+        	[ 0.85966819, -0.1858233 ,  0.47585744, -1.22590125],
+        	[ 0.11470105, -0.83750147, -0.53426113,  1.84997976],
+        	[ 0.        ,  0.        ,  0.        ,  1.        ]])
+        originaxes = misc.DrawAxes(env, [1,0,0,0,0,0,0], dist = 1, linewidth= 2)
+
+
 
         import IPython
         IPython.embed()

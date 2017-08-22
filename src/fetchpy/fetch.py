@@ -12,6 +12,7 @@ from openravepy import (
 	openrave_exception,
 )
 
+
 #fetch base and FETCHROBOT
 from .fetchrobot import FETCHRobot
 
@@ -108,10 +109,11 @@ def initialize(robot_xml = None, env_path = None, viewer = 'rviz',sim = True, **
 
 	if viewer == 'qtcoin':
 		env.SetViewer(viewer)
-
-
+		
+		
 	if viewer and env.GetViewer() is None:
 		env.SetViewer(viewer)
+
 		if env.GetViewer() is None:
 			raise Exception('Failed creating viewer of type "{0:s}".'.format(viewer))
 
