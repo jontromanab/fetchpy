@@ -12,13 +12,17 @@ class BaseVelocityPublisher(object):
 	def __init__(self, ns, controller_name, timeout = 0.0):
 		self.log = logging.getLogger(__name__)
 		as_name = ns + '/' + controller_name+'/command'
-		self._pub = rospy.Publisher(as_name,Twist, queue_size=10)
+		self._pub = rospy.Publisher(as_name,Twist, queue_size=1)
 
 	def execute(self, vel):
 		goal_msg = Twist()
-		goal_msg.linear.x = vel[0]
-		goal_msg.angular.z = vel[1]
-		self._pub.publish(goal_msg)
+		curr_vel = [0.0, 0.0]
+		disc_vel = numpy.array(vel)/10.
+		for i in range(10):
+			goal_msg.linear.x = disc_vel[0]
+			goal_msg.angular.z = disc_vel[1]
+			self._pub.publish(goal_msg)
+			rospy.sleep(0.1)
 
 class BaseVelocityController(OrController):
 	def __init__(self, namespace, controller_name, simulated = False, timeout = 10.0):
