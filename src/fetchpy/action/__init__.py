@@ -1,1 +1,1 @@
-from rogue import HaltHand, Wave
+from rogue import HaltHand, Wave, ILOVEYOU

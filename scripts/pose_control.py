@@ -6,7 +6,7 @@ import rospy
 if __name__ == '__main__':
 
 	rospy.init_node('fetchpy')
-	env, robot = fetchpy.initialize(sim=False, viewer = 'qtcoin')
+	env, robot = fetchpy.initialize(sim=True, viewer = 'qtcoin')
 	
 	keep_going = True
 
@@ -18,6 +18,7 @@ if __name__ == '__main__':
 		Press 3 to straight the arm.\n \
 		Press 4 to go to cleaing wall.\n \
 		Press 5 to wave.\n \
+		Press 6 to do I love you.\n \
 		Press 9 to quit." 
 
 		user_input = int(raw_input("Gesture? "))
@@ -46,6 +47,9 @@ if __name__ == '__main__':
 		elif user_input == 5:
 			print 'Waving!\n'
 			robot.Wave()
+		elif user_input == 6:
+			print 'I love you!\n'
+			robot.ILOVEYOU()
 		elif user_input == 9:
 			print 'Goodbye!\n'
 			keep_going = False

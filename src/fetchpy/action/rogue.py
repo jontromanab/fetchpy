@@ -3,6 +3,9 @@ from prpy.action import ActionMethod
 from prpy.util import FindCatkinResource, GetPointFrom
 import numpy, time
 
+from prpy.rave import load_trajectory
+from os.path import join
+
 
 logger = logging.getLogger('fetchpy')
 
@@ -43,10 +46,7 @@ def HaltHand(robot, manip = None):
 
 @ActionMethod
 def Wave(robot):
-	from prpy.rave import load_trajectory
-	from os.path import join
 	env = robot.GetEnv()
-
 	wave_path = FindCatkinResource('fetchpy', 'config/WaveTraj/')
 	traj0 = load_trajectory(env, join(wave_path, 'wave1.xml'))
 	traj1 = load_trajectory(env, join(wave_path, 'wave2.xml'))
@@ -58,6 +58,23 @@ def Wave(robot):
 	robot.ExecuteTrajectory(traj1)
 	robot.ExecuteTrajectory(traj2)
 	robot.ExecuteTrajectory(traj3)
+
+@ActionMethod
+def ILOVEYOU(robot):
+	robot.gripper.CloseHand()
+	env = robot.GetEnv()
+	i_pattern = ([-1.03, 0.2, -1.54, -1.52, -0.05, -2.14, 0.09])
+	robot.arm.PlanToConfiguration(i_pattern, execute = True) 
+	robot.Say('I')
+	l_pattern = ([-1.49, -0.00, 0.00, -1.65, 0.00, 0.00, 0.00])
+	robot.arm.PlanToConfiguration(l_pattern, execute = True)
+	robot.Say('love')
+	u_pattern = ([-0.1803065,-0.71321057,0.07084394,1.23903305,-0.10976212,-0.62392059,0.0]) 
+	robot.arm.PlanToConfiguration(u_pattern, execute = True)
+	robot.Say('you')
+
+
+
 
 
 
