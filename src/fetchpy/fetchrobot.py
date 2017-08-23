@@ -309,8 +309,8 @@ class FETCHRobot(Robot):
 
         # Verify that the trajectory is timed by checking whether the first
         # waypoint has a valid deltatime value.
-        #if not prpy.util.IsTimedTrajectory(traj):
-            #raise ValueError('Trajectory cannot be executed, it is not timed.')
+        if not prpy.util.IsTimedTrajectory(traj):
+            raise ValueError('Trajectory cannot be executed, it is not timed.')
 
         # Verify that the trajectory has non-zero duration.
         if traj.GetDuration() <= 0.0:
@@ -342,23 +342,6 @@ class FETCHRobot(Robot):
             
         print controllers_manip
         print active_controllers
-
-        # if self.arm in traj_manipulators:
-        #     if not self.arm.IsSimulated():
-        #         controllers_manip.append('arm_controller')
-        #     else:
-        #         active_controllers.append(self.arm.sim_controller)
-
-        # if self.arm_torso in traj_manipulators:
-        #     if not self.arm_torso.IsSimulated():
-        #         controllers_manip.append('arm_with_torso_controller')
-        #     else:
-        #         active_controllers.append(self.arm_torso.sim_controller)
-    
-
-        # load and activate controllers(change)
-        #if not self.full_controller_sim:
-        #self.controller_manager.request(controllers_manip).switch()
 
         # repeat logic and actually construct controller clients
         # now that we've activated them on the robot
