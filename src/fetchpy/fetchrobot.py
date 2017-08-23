@@ -81,7 +81,6 @@ class FETCHRobot(Robot):
                 raise RuntimeError('The -sim argument should be set if there is'
                     ' No real robot/Gazebo robot connected')
 
-            
             #update openrave state from /joint_states
             self._jointstate_client = JointStateClient(self, topic_name='/joint_states')
             self.controller_always_on.append('joint_state_controller')
@@ -92,11 +91,8 @@ class FETCHRobot(Robot):
         self.gripper = self.arm.GetEndEffector()
         self.hand = self.gripper
         self.head = self.GetManipulator('head')
-        
-        
-
-        #####ADD REST HERE (change)
         self.manipulators = [self.arm, self.arm_torso]
+
 
         #Dynamically switch to self-specific subclasses.
         prpy.bind_subclass(self.arm, ARM, sim= arm_sim, namespace = 'arm')
@@ -105,7 +101,7 @@ class FETCHRobot(Robot):
             namespace = '')
         prpy.bind_subclass(self.head, HEAD, robot=self, sim = head_sim, namespace = '')
         self.base = BASE(sim = base_sim, robot = self)
-        #####ADD REST HERE(change)
+        
 
         # Set FETCH's acceleration limits. These are not specified in URDF.
         accel_limits = self.GetDOFAccelerationLimits()
@@ -115,8 +111,7 @@ class FETCHRobot(Robot):
         self.SetDOFAccelerationLimits(accel_limits)
 
 
-        # Determine always-on controllers(have to do all the controllers here)
-        #arm controller
+        # Determine always-on controllers
         # Set default manipulator controllers in sim only (change)
         if not gripper_sim:
             self.controller_always_on.append('gripper_controller')
@@ -128,6 +123,8 @@ class FETCHRobot(Robot):
             self.arm.sim_controller = self.AttachController(name=self.arm.GetName(),
                 args = 'IdealController', dof_indices = self.arm.GetArmIndices(),
                 affine_dofs=0, simulated=True)
+        # For simulation we cannot assign same DOF indices to different controllers
+        # So for arm_torso only the torso is included
         if arm_torso_sim:
             self.arm_torso.sim_controller = self.AttachController(name=self.arm_torso.GetName(),
                 args = 'IdealController', dof_indices = [11],
@@ -143,15 +140,13 @@ class FETCHRobot(Robot):
 
         configurations_path = FindCatkinResource('fetchpy', 'config/configurations.yaml')
 
-        #(change)
         try: 
             self.configurations.load_yaml(configurations_path)
         except IOError as e:
             raise ValueError('Failed loading named configurations from "{:s}".'.format(
                 configurations_path))
 
-        #Hand configurations
-        #SOME OF THEM LIKE OPEN CLOSE GRASPING ETC. todo NOW(change)
+        #Gripper configurations
         self.gripper.configurations = ConfigurationLibrary()
         self.gripper.configurations.add_group('gripper', self.gripper.GetIndices())
         if isinstance(self.hand, GRIPPER):
@@ -219,7 +214,6 @@ class FETCHRobot(Robot):
         self.simplifier = None
 
         #Base Planning
-        #DO WE ACTUALLY NEED THIS? HOPEFULLY NOT(change)
         self.sbpl_planner = SBPLPlanner()
         self.base_planner = self.sbpl_planner
 
@@ -285,21 +279,19 @@ class FETCHRobot(Robot):
         self.planner = parent.planner
         self.base_planner = parent.base_planner
 
-    	#Add all here (change)
 
     def _ExecuteTrajectory(self, traj, defer=False, timeout=None, period=0.01,**kwargs):
-        #print 'HELLLLLLLLOOOOOOOOOOOOOO>>>>>>>I am here<<<<<<<<<'
         if defer is not False:
             raise RuntimeError('defer functionality was deprecated in ''personalrobotics/prpy#278')
-            # Don't execute trajectories that don't have at least one waypoint.
+
+        # Don't execute trajectories that don't have at least one waypoint.
         if traj.GetNumWaypoints() <= 0:
             raise ValueError('Trajectory must contain at least one waypoint.')
+
         # Check if this trajectory contains both affine and joint DOFs
         cspec = traj.GetConfigurationSpecification()
         needs_base = prpy.util.HasAffineDOFs(cspec)
         needs_joints = prpy.util.HasJointDOFs(cspec)
-
-        print prpy.util.GetTrajectoryIndices(traj)
 
         if needs_base and needs_joints:
             raise ValueError('Trajectories with affine and joint DOFs are not supported')
@@ -308,8 +300,10 @@ class FETCHRobot(Robot):
         # initial configuration specified by the trajectory.
         if not prpy.util.IsAtTrajectoryStart(self, traj):
             raise TrajectoryNotExecutable('Trajectory started from different configuration than robot.')
+
         # If there was only one waypoint, at this point we are done!
-        #if traj.GetNumWaypoints() == 1:
+        if traj.GetNumWaypoints() == 1:
+            return traj
 
         # Verify that the trajectory is timed by checking whether the first
         # waypoint has a valid deltatime value.
@@ -322,34 +316,26 @@ class FETCHRobot(Robot):
                           ' function that produced this trajectory to return a'
                           ' single-waypoint trajectory.', FutureWarning)
         
-
         traj_manipulators = self.GetTrajectoryManipulators(traj)
         controllers_manip = []
         active_controllers = []
 
         #Implementing different logic to determine which manipulator we want
-        if 11 in prpy.util.GetTrajectoryIndices(traj):#11 is DOF index of toso lift joint
-
+        if 11 in prpy.util.GetTrajectoryIndices(traj):
+            #11 is DOF index of toso lift joint
             if not self.arm_torso.IsSimulated():
-                print 'I am HERE NOW: ARM_TORSO'
                 controllers_manip.append('arm_with_torso_controller')
             else:
                 active_controllers.append(self.arm_torso.sim_controller)
                 active_controllers.append(self.arm.sim_controller)
-            
         else:
-            
             if not self.arm.IsSimulated():
                 controllers_manip.append('arm_controller')
             else:
                 active_controllers.append(self.arm.sim_controller)
-            
-        print controllers_manip
-        print active_controllers
-
+        
         # repeat logic and actually construct controller clients
         # now that we've activated them on the robot
-
         if 'arm_controller' in controllers_manip:
             active_controllers.append(RewdOrTrajectoryController(self, '',
                 'arm_controller',self.arm.GetJointNames()))
@@ -359,17 +345,12 @@ class FETCHRobot(Robot):
                 'arm_with_torso_controller',self.arm_torso.GetJointNames()))
 
         if needs_base:
-            print 'OK, We need BASE'
             if(hasattr(self,'base') and hasattr(self.base,'controller') and
                 self.base.controller is not None):
                 active_controllers.append(self.base.controller)
         else:
             logger.warning('Trajectory includes the base, but no base controller is'
                 'available. Is self.base.controller set?')
-
-        
-        
-
 
         ##ADD HERE ALL THE CONTROLLERS (change)
         for controller in active_controllers:
@@ -380,7 +361,6 @@ class FETCHRobot(Robot):
 
 
     def ExecuteTrajectory(self, traj, *args, **kwargs):
-        #print 'HELLLLLLLLOOOOOOOOOOOOOO>>>>>>>I am here executing<<<<<<<<<'
         value = self._ExecuteTrajectory(traj, *args, **kwargs)
         return value
 
