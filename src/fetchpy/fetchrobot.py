@@ -1,4 +1,5 @@
 PACKAGE = 'fetchpy'
+import rospy
 import logging
 import numbers
 import prpy
@@ -256,17 +257,20 @@ class FETCHRobot(Robot):
                                'pr_ordata package cannot be found. ' \
                                'Perception detector will not be loaded.' \
                                '\n{}'.format(e))
-        #HAVE TO IMPLEMENT TALKER(todo)(change)
-        # if not self.talker_simulated:
-        #     # Initialize herbpy ROS Node
-        #     import rospy
-        #     if not rospy.core.is_initialized():
-        #         raise RuntimeError('rospy not initialized. '
-        #                            'Must call rospy.init_node()')
 
-        #     import talker.msg
-        #     from actionlib import SimpleActionClient
-        #     self._say_action_client = SimpleActionClient('say', talker.msg.SayAction)
+        #TALKER
+        if not self.talker_simulated:
+            # Initialize fetchpy ROS Node
+            if not rospy.core.is_initialized():
+                raise RuntimeError('rospy not initialized. '
+                                   'Must call rospy.init_node()')
+            from sound_play.msg import SoundRequest
+            from sound_play.libsoundplay import SoundClient
+
+            self.soundhandle = SoundClient()
+            self.voice = 'voice_kal_diphone'
+            self.volume = 1.0
+            
 
 
     def CloneBindings(self, parent):
@@ -383,66 +387,55 @@ class FETCHRobot(Robot):
         # Inherit docstring from the parent class.
         ExecuteTrajectory.__doc__ = Robot.ExecuteTrajectory.__doc__
 
+    def SetStiffness(self, stiffness, manip=None):
+        """Set the stiffness of HERB's arms and head.
+        Stiffness False/0 is gravity compensation and stiffness True/(>0) is position
+        control.
+        @param stiffness boolean or numeric value 0.0 to 1.0
+        """
+        raise NotImplementedError('Not Implemented yet AGAIN.'
+            'There is a gravity compensation controller on real robot.' 
+            'Just subscribe to that and enable/disable')
 
-        def SetStiffness(self, stiffness, manip=None):
-            """Set the stiffness of HERB's arms and head.
-            Stiffness False/0 is gravity compensation and stiffness True/(>0) is position
-            control.
-            @param stiffness boolean or numeric value 0.0 to 1.0
-            """
-            raise NotImplementedError('Not Implemented yet AGAIN.'
-                'There is a gravity compensation controller on real robot. Just subscribe to that and enable/disable')
+        # if (isinstance(stiffness, numbers.Number) and
+        #         not (0 <= stiffness and stiffness <= 1)):
+        #     raise Exception('Stiffness must be boolean or numeric in the range [0, 1];'
+        #                     'got {}.'.format(stiffness))
 
+        # # TODO head after Schunk integration
+        # if manip is self.head:
+        #     raise NotImplementedError('Head immobilized under ros_control, SetStiffness not available.')
 
-            # if (isinstance(stiffness, numbers.Number) and
-            #         not (0 <= stiffness and stiffness <= 1)):
-            #     raise Exception('Stiffness must be boolean or numeric in the range [0, 1];'
-            #                     'got {}.'.format(stiffness))
+        # new_manip_controllers = []
+        # if stiffness:
+        #     if not self.left_arm.IsSimulated() and (manip is None or manip is self.left_arm):
+        #         new_manip_controllers.append('left_joint_group_position_controller')
+        #     if not self.right_arm.IsSimulated() and (manip is None or manip is self.right_arm):
+        #         new_manip_controllers.append('right_joint_group_position_controller')
+        # else:
+        #     if not self.left_arm.IsSimulated() and (manip is None or manip is self.left_arm):
+        #         new_manip_controllers.append(
+        #             'left_gravity_compensation_controller')
+        #     if not self.right_arm.IsSimulated() and (manip is None or manip is self.right_arm):
+        #         new_manip_controllers.append(
+        #             'right_gravity_compensation_controller')
 
-            # # TODO head after Schunk integration
-            # if manip is self.head:
-            #     raise NotImplementedError('Head immobilized under ros_control, SetStiffness not available.')
+        # if not self.full_controller_sim:
+        #     self.controller_manager.request(new_manip_controllers).switch()
+        ####(change)
 
-            # new_manip_controllers = []
-            # if stiffness:
-            #     if not self.left_arm.IsSimulated() and (manip is None or manip is self.left_arm):
-            #         new_manip_controllers.append('left_joint_group_position_controller')
-            #     if not self.right_arm.IsSimulated() and (manip is None or manip is self.right_arm):
-            #         new_manip_controllers.append('right_joint_group_position_controller')
-            # else:
-            #     if not self.left_arm.IsSimulated() and (manip is None or manip is self.left_arm):
-            #         new_manip_controllers.append(
-            #             'left_gravity_compensation_controller')
-            #     if not self.right_arm.IsSimulated() and (manip is None or manip is self.right_arm):
-            #         new_manip_controllers.append(
-            #             'right_gravity_compensation_controller')
-
-            # if not self.full_controller_sim:
-            #     self.controller_manager.request(new_manip_controllers).switch()
-
-            ####(change)
-
-
-
-
-        def Say(self, words, block=True):
-            """Speak 'words' using talker action service or espeak locally in simulation"""
-            raise NotImplementedError('Not Implemented yet AGAIN.'
-                'There is a gravity compensation controller on real robot. Just subscribe to that and enable/disable')
-            ####(change)
-            # if self.talker_simulated:
-            #     try:
-            #         proc = subprocess.Popen(['espeak', '-s', '160', '"{0}"'.format(words)])
-            #         if block:
-            #             proc.wait()
-            #     except OSError as e:
-            #         logger.error('Unable to speak. Make sure "espeak" is installed locally.\n%s' % str(e))
-            # else:
-            #     import talker.msg
-            #     goal = talker.msg.SayGoal(text=words)
-            #     self._say_action_client.send_goal(goal)
-            #     if block:
-            #         self._say_action_client.wait_for_result()
+    def Say(self, words, block=True):
+        """Speak 'words' using sound_play or espeak locally in simulation"""
+        if self.talker_simulated:
+            try:
+                proc = subprocess.Popen(['espeak', '-s', '160', '"{0}"'.format(words)])
+                if block:
+                    proc.wait()
+            except OSError as e:
+                logger.error('Unable to speak. Make sure "espeak" is installed locally.\n%s' % str(e))
+        else:
+            self.soundhandle.say(words)
+            rospy.sleep(1)
             
 
 
