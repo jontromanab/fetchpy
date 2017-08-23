@@ -129,7 +129,7 @@ class FETCHRobot(Robot):
                 affine_dofs=0, simulated=True)
         if arm_torso_sim:
             self.arm_torso.sim_controller = self.AttachController(name=self.arm_torso.GetName(),
-                args = 'IdealController', dof_indices = self.arm_torso.GetArmIndices(),
+                args = 'IdealController', dof_indices = [11],
                 affine_dofs=0, simulated=True)
 
 
@@ -297,8 +297,6 @@ class FETCHRobot(Robot):
 
         print prpy.util.GetTrajectoryIndices(traj)
 
-
-
         if needs_base and needs_joints:
             raise ValueError('Trajectories with affine and joint DOFs are not supported')
 
@@ -307,8 +305,8 @@ class FETCHRobot(Robot):
         if not prpy.util.IsAtTrajectoryStart(self, traj):
             raise TrajectoryNotExecutable('Trajectory started from different configuration than robot.')
         # If there was only one waypoint, at this point we are done!
-        if traj.GetNumWaypoints() == 1:
-            return traj
+        #if traj.GetNumWaypoints() == 1:
+
         # Verify that the trajectory is timed by checking whether the first
         # waypoint has a valid deltatime value.
         #if not prpy.util.IsTimedTrajectory(traj):
@@ -325,29 +323,37 @@ class FETCHRobot(Robot):
         controllers_manip = []
         active_controllers = []
 
-        #HEAD in traj(change)
-        # if self.head in traj_manipulators:
-        # 	# TODO head after Schunk integration
-        #     if len(traj_manipulators) == 1:
-        #         raise NotImplementedError('The head is currently disabled under ros_control.')
-        #     else:
-        #         logger.warning('The head is currently disabled under ros_control.')
+        #Implementing different logic to determine which manipulator we want
+        if 11 in prpy.util.GetTrajectoryIndices(traj):#11 is DOF index of toso lift joint
 
-        # logic to determine which controllers are needed(change)
-        print traj_manipulators
-        if self.arm in traj_manipulators:
-            print 'ARM IS IN'
+            if not self.arm_torso.IsSimulated():
+                print 'I am HERE NOW: ARM_TORSO'
+                controllers_manip.append('arm_with_torso_controller')
+            else:
+                active_controllers.append(self.arm_torso.sim_controller)
+                active_controllers.append(self.arm.sim_controller)
+            
+        else:
+            
             if not self.arm.IsSimulated():
                 controllers_manip.append('arm_controller')
             else:
                 active_controllers.append(self.arm.sim_controller)
+            
+        print controllers_manip
+        print active_controllers
 
-        if self.arm_torso in traj_manipulators:
-            print 'ARM_TORSO IS IN'
-            if not self.arm_torso.IsSimulated():
-                controllers_manip.append('arm_with_torso_controller')
-            else:
-                active_controllers.append(self.arm_torso.sim_controller)
+        # if self.arm in traj_manipulators:
+        #     if not self.arm.IsSimulated():
+        #         controllers_manip.append('arm_controller')
+        #     else:
+        #         active_controllers.append(self.arm.sim_controller)
+
+        # if self.arm_torso in traj_manipulators:
+        #     if not self.arm_torso.IsSimulated():
+        #         controllers_manip.append('arm_with_torso_controller')
+        #     else:
+        #         active_controllers.append(self.arm_torso.sim_controller)
     
 
         # load and activate controllers(change)
@@ -366,6 +372,7 @@ class FETCHRobot(Robot):
                 'arm_with_torso_controller',self.arm_torso.GetJointNames()))
 
         if needs_base:
+            print 'OK, We need BASE'
             if(hasattr(self,'base') and hasattr(self.base,'controller') and
                 self.base.controller is not None):
                 active_controllers.append(self.base.controller)
@@ -373,6 +380,7 @@ class FETCHRobot(Robot):
             logger.warning('Trajectory includes the base, but no base controller is'
                 'available. Is self.base.controller set?')
 
+        
         
 
 
