@@ -52,7 +52,7 @@ class ARM(Manipulator):
 		if not self.ikmodel.load():
 			if(self.namespace == 'arm'):
 				self.ikmodel.generate(iktype=iktype, precision=4,
-					freeindices=[self.GetIndices()[3]])
+					freeindices=[self.GetIndices()[2]])
 				self.ikmodel.save()
 			else:
 				self.ikmodel.generate(iktype=iktype, precision=4,

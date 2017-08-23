@@ -13,10 +13,6 @@ DESTINATION "${CATKIN_PACKAGE_BIN_DESTINATION}"
 )
                  
 
-                 ##scripts/generate_primitives_herb.py
-                 ##scripts/plot_primitives.py
-  ##DESTINATION "${CATKIN_PACKAGE_BIN_DESTINATION}"
-##)
-if (CATKIN_ENABLE_TESTING)
-  catkin_add_nosetests(tests)
-endif()
+##if (CATKIN_ENABLE_TESTING)
+  ##catkin_add_nosetests(tests)
+##endif()

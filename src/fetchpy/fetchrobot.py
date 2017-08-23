@@ -307,8 +307,8 @@ class FETCHRobot(Robot):
 
         # Verify that the trajectory is timed by checking whether the first
         # waypoint has a valid deltatime value.
-        if not prpy.util.IsTimedTrajectory(traj):
-            raise ValueError('Trajectory cannot be executed, it is not timed.')
+        # if not prpy.util.IsTimedTrajectory(traj):
+        #     raise ValueError('Trajectory cannot be executed, it is not timed.')
 
         # Verify that the trajectory has non-zero duration.
         if traj.GetDuration() <= 0.0:
@@ -374,8 +374,8 @@ class FETCHRobot(Robot):
         @param stiffness boolean or numeric value 0.0 to 1.0
         """
         raise NotImplementedError('Not Implemented yet AGAIN.'
-            'There is a gravity compensation controller on real robot.' 
-            'Just subscribe to that and enable/disable')
+            'There is a gravity compensation controller on real robot running internally.' )
+            
 
         # if (isinstance(stiffness, numbers.Number) and
         #         not (0 <= stiffness and stiffness <= 1)):
