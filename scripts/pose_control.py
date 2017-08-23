@@ -17,6 +17,7 @@ if __name__ == '__main__':
 		Press 2 to say something.\n \
 		Press 3 to straight the arm.\n \
 		Press 4 to go to cleaing wall.\n \
+		Press 5 to wave.\n \
 		Press 9 to quit." 
 
 		user_input = int(raw_input("Gesture? "))
@@ -42,6 +43,9 @@ if __name__ == '__main__':
 			print 'Clean wall position!\n'
 			clean_wall = ([0.35,-0.1803065,-0.71321057,0.07084394,1.23903305,-0.10976212,-0.62392059,0.0])
 			robot.arm_torso.PlanToConfiguration(clean_wall, execute = True) 
+		elif user_input == 5:
+			print 'Waving!\n'
+			robot.Wave()
 		elif user_input == 9:
 			print 'Goodbye!\n'
 			keep_going = False

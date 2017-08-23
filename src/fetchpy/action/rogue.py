@@ -29,6 +29,38 @@ def Point(robot, coord, manip = None, render = False):
 			robot.PlanToTSR(point_tsr, execute=True)
 	robot.gripper.CloseHand()
 
+@ActionMethod
+def HaltHand(robot, manip = None):
+	if manip == None:
+		manip = robot.GetActiveManipulator()
+	pose = ([-0.46, -0.17, 0.0, -1.57, -0.35, 0.56, 0.0])
+	print manip.GetName()
+	if manip.GetName() == 'arm':
+		robot.arm.PlanToConfiguration(pose, execute = True)
+	else:
+		pose.insert(0, 0.25)
+		robot.arm_torso.PlanToConfiguration(pose, execute = True)
+
+@ActionMethod
+def Wave(robot):
+	from prpy.rave import load_trajectory
+	from os.path import join
+	env = robot.GetEnv()
+
+	wave_path = FindCatkinResource('fetchpy', 'config/WaveTraj/')
+	traj0 = load_trajectory(env, join(wave_path, 'wave1.xml'))
+	traj1 = load_trajectory(env, join(wave_path, 'wave2.xml'))
+	traj2 = load_trajectory(env, join(wave_path, 'wave1.xml'))
+	traj3 = load_trajectory(env, join(wave_path, 'wave2.xml'))
+	manip = robot.arm
+	robot.HaltHand(manip = manip)
+	robot.ExecuteTrajectory(traj0)
+	robot.ExecuteTrajectory(traj1)
+	robot.ExecuteTrajectory(traj2)
+	robot.ExecuteTrajectory(traj3)
+
+
+
 
 
 	

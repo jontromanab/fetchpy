@@ -222,7 +222,7 @@ class FETCHRobot(Robot):
         self.actions = ActionLibrary()
 
         # Register default actions and TSRs: TODO(change)
-        #import fetchpy.action
+        import fetchpy.action
         #import fetch.tsr
 
         #Setting necessary sim flags
@@ -307,8 +307,8 @@ class FETCHRobot(Robot):
 
         # Verify that the trajectory is timed by checking whether the first
         # waypoint has a valid deltatime value.
-        # if not prpy.util.IsTimedTrajectory(traj):
-        #     raise ValueError('Trajectory cannot be executed, it is not timed.')
+        if not prpy.util.IsTimedTrajectory(traj):
+            raise ValueError('Trajectory cannot be executed, it is not timed.')
 
         # Verify that the trajectory has non-zero duration.
         if traj.GetDuration() <= 0.0:
@@ -364,8 +364,8 @@ class FETCHRobot(Robot):
         value = self._ExecuteTrajectory(traj, *args, **kwargs)
         return value
 
-        # Inherit docstring from the parent class.
-        ExecuteTrajectory.__doc__ = Robot.ExecuteTrajectory.__doc__
+    # Inherit docstring from the parent class.
+    ExecuteTrajectory.__doc__ = Robot.ExecuteTrajectory.__doc__
 
     def SetStiffness(self, stiffness, manip=None):
         """Set the stiffness of HERB's arms and head.
