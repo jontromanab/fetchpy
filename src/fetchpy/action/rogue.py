@@ -73,6 +73,39 @@ def ILOVEYOU(robot):
 	robot.arm.PlanToConfiguration(u_pattern, execute = True)
 	robot.Say('you')
 
+@ActionMethod
+def NodYes(robot):
+	pause = 0.15
+	robot.Say('Yes')
+	robot.head.MoveToNamedConfiguration('look_straight')
+	time.sleep(pause)
+	robot.head.MoveToNamedConfiguration('look_down')
+	time.sleep(pause)
+	robot.head.MoveToNamedConfiguration('look_up')
+	time.sleep(pause)
+	robot.head.MoveToNamedConfiguration('look_down')
+	time.sleep(pause)
+	robot.head.MoveToNamedConfiguration('look_straight')
+	time.sleep(pause)
+
+@ActionMethod
+def NodNo(robot):
+	pause = 0.15
+	robot.Say('No')
+	robot.head.MoveToNamedConfiguration('look_straight')
+	time.sleep(pause)
+	robot.head.MoveToNamedConfiguration('look_right')
+	time.sleep(pause)
+	robot.head.MoveToNamedConfiguration('look_left')
+	time.sleep(pause)
+	robot.head.MoveToNamedConfiguration('look_right')
+	time.sleep(pause)
+	robot.head.MoveToNamedConfiguration('look_straight')
+	time.sleep(pause)
+
+
+
+
 
 
 
