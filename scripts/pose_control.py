@@ -6,7 +6,7 @@ import rospy
 if __name__ == '__main__':
 
 	rospy.init_node('fetchpy')
-	env, robot = fetchpy.initialize(sim=False, viewer = 'qtcoin')
+	env, robot = fetchpy.initialize(sim=False)
 	
 	keep_going = True
 

@@ -54,10 +54,38 @@ def Wave(robot):
 	traj3 = load_trajectory(env, join(wave_path, 'wave2.xml'))
 	manip = robot.arm
 	robot.HaltHand(manip = manip)
+	pause = 0.30
+	time.sleep(pause)
 	robot.ExecuteTrajectory(traj0)
 	robot.ExecuteTrajectory(traj1)
 	robot.ExecuteTrajectory(traj2)
 	robot.ExecuteTrajectory(traj3)
+
+@ActionMethod
+def Wave2(robot):
+	robot.gripper.OpenHand()
+	pose1 = ([-1.50, 0.55, 0.00, -1.94, 0.00, 0.00, -1.43])
+	robot.arm.PlanToConfiguration(pose1, execute = True)
+	env = robot.GetEnv()
+	wave_path = FindCatkinResource('fetchpy', 'config/WaveTraj2/')
+	traj0 = load_trajectory(env, join(wave_path, 'wave1.xml'))
+	traj1 = load_trajectory(env, join(wave_path, 'wave2.xml'))
+	traj2 = load_trajectory(env, join(wave_path, 'wave1.xml'))
+	traj3 = load_trajectory(env, join(wave_path, 'wave2.xml'))
+	traj4 = load_trajectory(env, join(wave_path, 'wave1.xml'))
+	traj5 = load_trajectory(env, join(wave_path, 'wave2.xml'))
+	manip = robot.arm
+	pause = 0.60
+	time.sleep(pause)
+	robot.ExecuteTrajectory(traj1)
+	robot.ExecuteTrajectory(traj2)
+	robot.ExecuteTrajectory(traj3)
+	robot.ExecuteTrajectory(traj4)
+	robot.ExecuteTrajectory(traj5)
+	robot.ExecuteTrajectory(traj0)
+	robot.gripper.CloseHand()
+
+	
 
 @ActionMethod
 def ILOVEYOU(robot):
@@ -71,7 +99,7 @@ def ILOVEYOU(robot):
 	robot.Say('love')
 	u_pattern = ([-0.1803065,-0.71321057,0.07084394,1.23903305,-0.10976212,-0.62392059,0.0]) 
 	robot.arm.PlanToConfiguration(u_pattern, execute = True)
-	robot.Say('you')
+	robot.Say('youu')
 
 @ActionMethod
 def NodYes(robot):
