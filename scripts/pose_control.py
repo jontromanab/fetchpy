@@ -48,7 +48,7 @@ if __name__ == '__main__':
 			robot.arm_torso.PlanToConfiguration(clean_wall, execute = True) 
 		elif user_input == 5:
 			print 'Waving!\n'
-			robot.Wave()
+			robot.Wave2()
 		elif user_input == 6:
 			print 'I love you!\n'
 			robot.ILOVEYOU()
