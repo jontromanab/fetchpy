@@ -13,6 +13,7 @@ from .arm import ARM
 from .gripper import GRIPPER
 from .head import HEAD
 from .base import BASE
+from .whole_body import WholeBody
 
 from prpy import Cloned
 from prpy.action import ActionLibrary
@@ -49,7 +50,7 @@ def try_and_warn(fn, exception_type, message, default_value=None):
 
 class FETCHRobot(Robot):
     def __init__(self,arm_sim,arm_torso_sim,
-        gripper_sim, head_sim, torso_sim, base_sim, talker_sim, 
+        gripper_sim, head_sim, torso_sim, base_sim, talker_sim, whole_body_sim,
         perception_sim,robot_checker_factory):
 
         Robot.__init__(self, robot_name = 'fetch')
@@ -101,6 +102,7 @@ class FETCHRobot(Robot):
             namespace = '')
         prpy.bind_subclass(self.head, HEAD, robot=self, sim = head_sim, namespace = '')
         self.base = BASE(sim = base_sim, robot = self)
+        self.whole_body = WholeBody(sim = whole_body_sim, robot = self)
         
 
         # Set FETCH's acceleration limits. These are not specified in URDF.

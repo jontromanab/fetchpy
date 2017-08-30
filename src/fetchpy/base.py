@@ -90,8 +90,13 @@ class BASE(MobileBase):
 					timeout)
 
 	def Move(self, vel, execute = True, timeout = None, **kwargs):
-		self.controller.SetDesired(vel)
-		is_done = prpy.util.WaitForControllers([self.controller], timeout=
+		if self.simulated:
+			self.Rotate(vel[1])
+			self.Forward(vel[0])
+			
+		else:
+			self.controller.SetDesired(vel)
+			is_done = prpy.util.WaitForControllers([self.controller], timeout=
 					timeout)
 
 	def DriveAlongVector(self, direction, goal_pos):

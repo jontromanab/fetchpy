@@ -80,7 +80,7 @@ def initialize(robot_xml = None, env_path = None, viewer = 'rviz',sim = True, **
 
 	#Default arguments
 	keys = ['arm_sim','arm_torso_sim','gripper_sim',
-	'head_sim','torso_sim','base_sim','talker_sim','perception_sim']
+	'head_sim','torso_sim','base_sim','talker_sim','perception_sim','whole_body_sim']
 
 	for key in keys:
 		if key not in kw_args:

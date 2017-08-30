@@ -36,7 +36,7 @@ if __name__ == '__main__':
 			 1.6600064741153062, -1.3477542619710903e-06 ]     
 			robot.arm_torso.PlanToConfiguration(arm_dock, execute = True)   
 		elif user_input == 2:
-			say_this = raw_input('What do you want Fetch to say? ')
+			say_this = raw_input('What do you want HERB to say? ')
 			robot.Say(say_this)
 		elif user_input == 3:
 			print 'Straightning the arm!\n'
@@ -47,7 +47,7 @@ if __name__ == '__main__':
 			clean_wall = ([0.35,-0.1803065,-0.71321057,0.07084394,1.23903305,-0.10976212,-0.62392059,0.0])
 			robot.arm_torso.PlanToConfiguration(clean_wall, execute = True) 
 		elif user_input == 5:
-			print 'I am Waving!\n'
+			print 'Waving!\n'
 			robot.Wave2()
 		elif user_input == 6:
 			print 'I love you!\n'
