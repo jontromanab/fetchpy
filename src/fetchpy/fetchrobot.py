@@ -294,6 +294,7 @@ class FETCHRobot(Robot):
         cspec = traj.GetConfigurationSpecification()
         needs_base = prpy.util.HasAffineDOFs(cspec)
         needs_joints = prpy.util.HasJointDOFs(cspec)
+        print needs_base
 
         if needs_base and needs_joints:
             raise ValueError('Trajectories with affine and joint DOFs are not supported')
@@ -319,30 +320,35 @@ class FETCHRobot(Robot):
                           ' single-waypoint trajectory.', FutureWarning)
         
         traj_manipulators = self.GetTrajectoryManipulators(traj)
+        print traj_manipulators
         controllers_manip = []
         active_controllers = []
 
         #Implementing different logic to determine which manipulator we want
-        if 11 in prpy.util.GetTrajectoryIndices(traj):
-            #11 is DOF index of toso lift joint
-            if not self.arm_torso.IsSimulated():
-                controllers_manip.append('arm_with_torso_controller')
+        if (needs_joints):
+            if 11 in prpy.util.GetTrajectoryIndices(traj):
+                #11 is DOF index of toso lift joint
+                if not self.arm_torso.IsSimulated():
+                    controllers_manip.append('arm_with_torso_controller')
+                else:
+                    active_controllers.append(self.arm_torso.sim_controller)
+                    active_controllers.append(self.arm.sim_controller)
+
             else:
-                active_controllers.append(self.arm_torso.sim_controller)
-                active_controllers.append(self.arm.sim_controller)
-        else:
-            if not self.arm.IsSimulated():
-                controllers_manip.append('arm_controller')
-            else:
-                active_controllers.append(self.arm.sim_controller)
+                if not self.arm.IsSimulated():
+                    controllers_manip.append('arm_controller')
+                else:
+                    active_controllers.append(self.arm.sim_controller)
         
         # repeat logic and actually construct controller clients
         # now that we've activated them on the robot
         if 'arm_controller' in controllers_manip:
+            print 'Arm am being called'
             active_controllers.append(RewdOrTrajectoryController(self, '',
                 'arm_controller',self.arm.GetJointNames()))
 
         if 'arm_with_torso_controller' in controllers_manip:
+            print 'Arm_torso am being called'
             active_controllers.append(RewdOrTrajectoryController(self, '',
                 'arm_with_torso_controller',self.arm_torso.GetJointNames()))
 
@@ -350,9 +356,9 @@ class FETCHRobot(Robot):
             if(hasattr(self,'base') and hasattr(self.base,'controller') and
                 self.base.controller is not None):
                 active_controllers.append(self.base.controller)
-        else:
-            logger.warning('Trajectory includes the base, but no base controller is'
-                'available. Is self.base.controller set?')
+            else:
+                logger.warning('Trajectory includes the base, but no base controller is'
+                    'available. Is self.base.controller set?')
 
         ##ADD HERE ALL THE CONTROLLERS (change)
         for controller in active_controllers:

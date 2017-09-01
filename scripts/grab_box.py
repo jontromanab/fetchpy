@@ -38,10 +38,50 @@ def createZigZagHalf(pose, length):
         poses.append(app_pose)
     return poses
 
+def createHalfCircleWithDir(pose, radius, x_dir=1, y_dir=1, inverted = False):
+    poses = []
+    app_pose = pose
+    theta = np.linspace(0, 2*np.pi, 100)
+    r = np.sqrt(radius)
+    x = r* np.cos(theta)
+    y = r* np.sin(theta)
+    for i in range(len(x)/2):
+        if(inverted):
+            add = [y_dir * y[i]/20,x_dir * x[i]/20,0,0,0,0]
+        else: 
+            add = [x_dir * x[i]/20,y_dir * y[i]/20,0,0,0,0]
+        app_pose = app_pose+add
+        poses.append(app_pose)
+    return poses
+
+def createFullCircleWithDir(pose, radius, x_dir=1, y_dir=1, inverted = False):
+    poses = []
+    app_pose = pose
+    theta = np.linspace(0, 2*np.pi, 100)
+    r = np.sqrt(radius)
+    x = r* np.cos(theta)
+    y = r* np.sin(theta)
+    for i in range(len(x)):
+        if(inverted):
+            add = [y_dir * y[i]/20,x_dir * x[i]/20,0,0,0,0]
+        else: 
+            add = [x_dir * x[i]/20,y_dir * y[i]/20,0,0,0,0]
+        app_pose = app_pose+add
+        poses.append(app_pose)
+    return poses
+
+
+def createGolGol(pose, radius):
+    poses = createHalfCircleWithDir(pose,radius,inverted = True)
+    poses2 = createFullCircleWithDir(poses[-1], radius/4.,y_dir = -1)
+    for j in poses2:
+            poses.append(j)
+    return poses
+
 def createPattern(pose, length, num):
-    poses = createZigZagHalf(pose, length)
+    poses = createGolGol(pose, length)
     for i in range(num-1):
-        add_poses = createZigZagHalf(poses[-1], length)
+        add_poses = createGolGol(poses[-1], length)
         for j in add_poses:
             poses.append(j)
     return poses
@@ -213,6 +253,35 @@ pink = [1,0,0.5,1]
 yellow = [1,1,0,1]
 handles = []
 
+def createHalfCircleWholeWallPattern(pose):
+    poses = createHalfCircleWithDirZ(pose, 0.015, 3, inverted = True)
+    side_poses1 = createHalfCircleWithDirZ(poses[-1], 0.015, 3, inverted = True)
+    for j in side_poses1:
+        poses.append(j)
+#     side_poses2 = createHalfCirclePattern(poses[-1], 0.025, 3, x_dir = -1, y_dir = -1, inverted = True)
+#     for j in side_poses2:
+#            poses.append(j)
+#     side_poses3 = createHalfCirclePattern(poses[-1], 0.02, 2, x_dir=-1)
+#     for j in side_poses3:
+#            poses.append(j)
+    
+    return poses
+
+def createHalfCircleWithDirZ(pose, radius, x_dir=1, y_dir=1, inverted = False):
+    poses = []
+    app_pose = pose
+    theta = np.linspace(0, 2*np.pi, 100)
+    r = np.sqrt(radius)
+    x = r* np.cos(theta)
+    y = r* np.sin(theta)
+    for i in range(len(x)/2):
+        if(inverted):
+            add = [y_dir * y[i]/20,0,x_dir * x[i]/20,0,0,0]
+        else: 
+            add = [x_dir * x[i]/20,0,y_dir * y[i]/20,0,0,0,0]
+        app_pose = app_pose+add
+        poses.append(app_pose)
+    return poses
     
 def executeVelPath(robot, pose, handles,unitTime = 1.0,joint_velocity_limits=None):
     manip = robot.SetActiveManipulator('arm')
@@ -227,7 +296,7 @@ def executeVelPath(robot, pose, handles,unitTime = 1.0,joint_velocity_limits=Non
         robot.SetAffineRotationAxisMaxVels(np.ones(4))
 
         finalgoal = getGoalToExecute(robot, pose, unitTime)
-        print 'I am here'
+        #print 'I am here'
         #print finalgoal
         #q_arm = finalgoal[1:8]
         #robot.arm.PlanToConfiguration(q_arm, execute = True) 
@@ -239,7 +308,7 @@ def executeVelPath(robot, pose, handles,unitTime = 1.0,joint_velocity_limits=Non
         	if i != (8):
         		imd_goal.append(finalgoal[i]) 
 
-        print imd_goal
+        #print imd_goal
         finalgoal2 =[]
         for i in range(len(imd_goal)):
         	if i>6:
@@ -319,13 +388,14 @@ if __name__ == '__main__':
 
 		raw_input("Press enter to continue...")
 
-		to_Table = ([0.70503065,-0.81321057,0.44084394,1.52903305,-0.37976212,0.92392059,0.8291418])
+		to_Table = ([0.70503065, -0.81321057,  0.44084394,  1.52903305, -0.37976212,0.92392059,  0.8291418])
 		robot.arm.PlanToConfiguration(to_Table, execute = True) 
 
 		raw_input("Press enter to continue...")
 
 
-		poses = createPattern(transformToPose(getTransform('gripper_link')),200,4)
+		#poses = createPattern(transformToPose(getTransform('gripper_link')),0.03,2)
+		poses = createHalfCircleWholeWallPattern(transformToPose(getTransform('gripper_link')))
 		pl = plottingPoints(robot.GetEnv(),handles)
 		pl.plotPoints(poses, 0.005, pink)
 		stat_trns = getTransformBetweenLinks('wrist_roll_link','gripper_link')

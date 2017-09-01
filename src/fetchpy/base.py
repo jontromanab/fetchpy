@@ -18,12 +18,13 @@ class BaseVelocityPublisher(object):
 	def execute(self, vel):
 		goal_msg = Twist()
 		curr_vel = [0.0, 0.0]
-		disc_vel = numpy.array(vel*10)/10.
-		for i in range(10):
-			goal_msg.linear.x = disc_vel[0]
-			goal_msg.angular.z = disc_vel[1]
-			self._pub.publish(goal_msg)
-			rospy.sleep(0.1)
+		print vel
+		# disc_vel = numpy.array(vel*10)/10.
+		# for i in range(10):
+		# 	goal_msg.linear.x = disc_vel[0]
+		# 	goal_msg.angular.z = disc_vel[1]
+		# 	self._pub.publish(goal_msg)
+		# 	rospy.sleep(0.1)
 
 class BaseVelocityController(OrController):
 	def __init__(self, namespace, controller_name, simulated = False, timeout = 10.0):
@@ -37,7 +38,7 @@ class BaseVelocityController(OrController):
 		self.logger.info('Base velocity controller {}/{} initialized'
 			.format(namespace,controller_name))
 
-	def SetDesired(self, vel):
+	def SetPath(self, vel):
 		if not self.IsDone():
 			self.logger.warning('Base controller is alreday in progress. You should wait')
 		self.logger.info('Moving by: {}'.format(vel))
@@ -54,8 +55,24 @@ class BASE(MobileBase):
 		self.logger = logging.getLogger(__name__)
 		self.robot = robot
 
+		
+		# self.controller = BaseVelocityController('','base_controller')
+			
+		
+		# self.controller = robot.AttachController(name = robot.GetName(),
+		# 		args='NavigationController {0:s} {1:s}'.format('fetchpy', 
+		# 			'/navcontroller'),dof_indices=[],affine_dofs=
+		# 		openravepy.DOFAffine.Transform,simulated=sim)
+
+
+
 		if not self.simulated:
 			self.controller = BaseVelocityController('','base_controller')
+			# my_sim = True
+			# self.controller = robot.AttachController(name = robot.GetName(),
+			# 	args='NavigationController {0:s} {1:s}'.format('fetchpy', 
+			# 		'/navcontroller'),dof_indices=[],affine_dofs=
+			# 	openravepy.DOFAffine.Transform,simulated=my_sim)
 			
 		else:
 			self.controller = robot.AttachController(name = robot.GetName(),
@@ -72,10 +89,12 @@ class BASE(MobileBase):
 				timeout=timeout, **kwargs)
 		else:
 			with prpy.util.Timer('Drive Base'):
-				vel = [meters, 0.0]
-				self.controller.SetDesired(vel)
-				is_done = prpy.util.WaitForControllers([self.controller], timeout=
-					timeout)
+				# vel = [meters, 0.0]
+				# self.controller.SetPath(vel)
+				# is_done = prpy.util.WaitForControllers([self.controller], timeout=
+				# 	timeout)
+				return MobileBase.Forward(self, meters/10., execute=execute,
+				timeout=timeout, **kwargs)
 			
 
 	def Rotate(self, angle_rad, execute = True, timeout = None, **kwargs):
@@ -85,7 +104,7 @@ class BASE(MobileBase):
 		else:
 			with prpy.util.Timer('Drive Base'):
 				vel = [0.0, angle_rad]
-				self.controller.SetDesired(vel)
+				self.controller.SetPath(vel)
 				is_done = prpy.util.WaitForControllers([self.controller], timeout=
 					timeout)
 
