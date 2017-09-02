@@ -294,8 +294,7 @@ class FETCHRobot(Robot):
         cspec = traj.GetConfigurationSpecification()
         needs_base = prpy.util.HasAffineDOFs(cspec)
         needs_joints = prpy.util.HasJointDOFs(cspec)
-        print needs_base
-
+        
         if needs_base and needs_joints:
             raise ValueError('Trajectories with affine and joint DOFs are not supported')
 
@@ -320,7 +319,6 @@ class FETCHRobot(Robot):
                           ' single-waypoint trajectory.', FutureWarning)
         
         traj_manipulators = self.GetTrajectoryManipulators(traj)
-        print traj_manipulators
         controllers_manip = []
         active_controllers = []
 
