@@ -60,6 +60,13 @@ class BaseVelocityController(OrController):
 		for i in vel:
 			self._current_cmd = self.Publisher.execute(i)
 
+	def SetDesired(self,vel):
+		if not self.IsDone():
+			self.logger.warning('Base controller is alreday in progress. You should wait')
+		self.logger.info('Moving by: {}'.format(vel))
+		self._current_cmd = self.Publisher.execute(vel)
+
+
 	def IsDone(self):
 		return self._current_cmd is None or self._current_cmd.done()
 
