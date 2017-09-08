@@ -33,4 +33,11 @@ In this mode, you can control the gazebo simulated robot through fetchpy. The ga
 [fetch_gazebo] (https://github.com/fetchrobotics/fetch_gazebo)
 ```
 $ roslaunch fetch_gazebo simulation.launch
+$ rosun fetchpy console.py
 ```
+### 3. Running the real robot: ###
+This mode, controls the real robot. Make sure the robot is at a safe distance from human and the robot workspace is not in probable collision with the environment. Access the robot and run:
+```
+$ rosrun fetchpy console.py 
+```
+
