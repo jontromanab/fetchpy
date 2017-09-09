@@ -7,23 +7,25 @@ fetchpy extensively uses the [PrPy] (https://github.com/personalrobotics/prpy) a
 
 
 ## Installation ##
+
 clone this repository in your workspace.
 ```
-$git clone https://github.com/jontromanab/fetchpy
-$cd ..
-$catkin_make
+$ git clone https://github.com/jontromanab/fetchpy
+$ cd ..
+$ catkin_make
 ```
 
 ## Running Fetchpy ##
 Calling the ``initialize`` function in your script, you can call all the fetchpy related components in openrave
 ```
-env.robot = fetchpy.initialize()
+env, robot = fetchpy.initialize()
 ```
 By default, this function loads the OpenRAVE plugins necessary to communicate with Fetch's hardware drivers. You can run fetchpy in simulation mode by passing the option ``sim=True``. With default settings an RViz viewer will be attached. You can set the viewer to qtcoin to passing the ``--viewer qtcoin`` argument. 
 
+## Fetchpy Console ##
 There are 3 modes supported on fetchpy. The ``roscore`` should be running in all the modes:
 
-### 1. Running only in OpenRave: ###
+### 1. Running only in OpenRAVE: ###
 In this mode, you can set the robot to openrave simulation mode and can control the robot only in openrave. 
 ```
 $ rosrun fetchpy console.py --sim
@@ -40,4 +42,12 @@ This mode, controls the real robot. Make sure the robot is at a safe distance fr
 ```
 $ rosrun fetchpy console.py 
 ```
+## Accessing Individual Components ##
+The robot returned by fetchpy.initialize() is an OpenRAVE robot. This object provides access to individual components of fetch robot.
 
+* ``robot.head`` : The panning and tilting head of the robot
+* ``robot.gripper`` : The parallel gripper of the robot
+* ``robot.arm`` : The 7DOF arm of the robot
+* ``robot.arm_torso`` : The 7DOF arm and the torso
+* ``robot.base`` : The non-holonomic base of the robot
+## Using the head ##
