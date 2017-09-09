@@ -51,3 +51,24 @@ The robot returned by fetchpy.initialize() is an OpenRAVE robot. This object pro
 * ``robot.arm_torso`` : The 7DOF arm and the torso
 * ``robot.base`` : The non-holonomic base of the robot
 ## Using the head ##
+The most basic option to move the head to a desired position is calling the MoveTo() function. This function can directly take joint values of the 'head_pan_joint' and 'head_tilt_joint'. The limts of head_pan_joint is [-1.57, 1.57] and head_tilt_joint is [-0.76, 1.45]. e.g. For looking at a position at the lower left, you can pass:
+```
+robot.head.MoveTo([-1.42, 1.34])
+```
+You can also move the robot head to presaved positions by:
+```
+robot.head.PlanToNamedConfiguration('look_up', execute=True)
+```
+to look up. Other pre-saved configurations are ``'look_straight','look_down','look_right','look_left'``. The ``execute = True`` argument is the most important argument, without this the system will only plan for the configuration and return an untimed trajectory, but will not execute it.
+You can also move the head to look at a point in the environment specified by a position vector. This command is specifically useful if you want to track the endeffector for any task. To look at a point at 3.0 in x, -2.0 in y and 4.0 in z:
+```
+robot.head.LookAt([3.0, -2.0, 4.0])
+```
+If you need the current state of the joints in the head, you can call:
+```
+robot.head.GetJointState()
+```
+or if you just want to get the index of the head joints:
+```
+robot.head.GetIndices()
+```
