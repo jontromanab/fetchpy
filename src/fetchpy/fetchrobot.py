@@ -381,34 +381,7 @@ class FETCHRobot(Robot):
         """
         raise NotImplementedError('Not Implemented yet AGAIN.'
             'There is a gravity compensation controller on real robot running internally.' )
-            
-
-        # if (isinstance(stiffness, numbers.Number) and
-        #         not (0 <= stiffness and stiffness <= 1)):
-        #     raise Exception('Stiffness must be boolean or numeric in the range [0, 1];'
-        #                     'got {}.'.format(stiffness))
-
-        # # TODO head after Schunk integration
-        # if manip is self.head:
-        #     raise NotImplementedError('Head immobilized under ros_control, SetStiffness not available.')
-
-        # new_manip_controllers = []
-        # if stiffness:
-        #     if not self.left_arm.IsSimulated() and (manip is None or manip is self.left_arm):
-        #         new_manip_controllers.append('left_joint_group_position_controller')
-        #     if not self.right_arm.IsSimulated() and (manip is None or manip is self.right_arm):
-        #         new_manip_controllers.append('right_joint_group_position_controller')
-        # else:
-        #     if not self.left_arm.IsSimulated() and (manip is None or manip is self.left_arm):
-        #         new_manip_controllers.append(
-        #             'left_gravity_compensation_controller')
-        #     if not self.right_arm.IsSimulated() and (manip is None or manip is self.right_arm):
-        #         new_manip_controllers.append(
-        #             'right_gravity_compensation_controller')
-
-        # if not self.full_controller_sim:
-        #     self.controller_manager.request(new_manip_controllers).switch()
-        ####(change)
+       
 
     def Say(self, words, block=True):
         """Speak 'words' using sound_play or espeak locally in simulation"""
