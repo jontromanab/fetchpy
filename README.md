@@ -157,8 +157,8 @@ robot.arm.PlanToConfiguration(angle2, execute = True)
 ```
 There are also simple named configurations that can be easily setup. You can plan for a straight arm or docked arm configuration by:
 ```
-robot.PlanToNamedConfiguration('arm_dock', execute=True)
-robot.PlanToNamedConfiguration('straight', execute=True)
+robot.arm.PlanToNamedConfiguration('arm_dock', execute=True)
+robot.arm.PlanToNamedConfiguration('straight', execute=True)
 ```
 
 
