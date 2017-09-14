@@ -143,12 +143,19 @@ env = robot.GetEnvironment()
 traj = load_trajectory(env, '/home/buddy/Desktop/my_new_traj.xml')
 robot.ExecutePath(traj)
 ```
+You can also plan for an offset from its current position. The following piece of code will mode the arm .1 meters in the +z direction (UP)
+```
+distance = .1
+direction = [0,0,1]
+robot.arm.PlanToEndEffectorOffset(direction, distance, execute=True)
+```
+
 You can also plan the arm to a configuration.
 ```
 angle = ([0.35, -0.5,0.5,0.75,-0.55,0.78,0.9]) 
 robot.arm.PlanToConfiguration(angle2, execute = True) 
 ```
-There 
+
 
 
 
