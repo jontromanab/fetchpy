@@ -109,3 +109,46 @@ robot.base.Rotate(0.5)
 ```
 
 ## Using the arm ##
+The manipulator of the Fetch robot is 7DOF arm. To get the current DOF values of the arm. To get the joint names and current joint values of the arm:
+```
+robot.arm.GetJointNames()
+robot.arm.GetDOFValues()
+```
+To plan the endeffector to reach a position and orientation in the environment, you can directly provide the 4x4 homogeneous transformation matrix in the world coordinate, assuming the robot base is at the origin.
+```
+import numpy
+Tgoal = numpy.array([[0.49946526,0.8461969,0.18570209,0.45915831],
+                    [-0.30122926,0.37060927,-0.87858392,0.3065221], 
+                    [-0.8122779,0.38288324,0.44000572,0.9], 
+                    [0,0,0,1]])
+robot.arm.PlanToEndEffectorPose(Tgoal,execute = True)
+```
+You can directly call the IK Solution too.
+```
+filter_options = openravepy.IkFilterOptions.CheckEnvCollisions # or 0 for no collision checks
+config = robot.arm.FindIKSolution(Tgoal, filter_options) # will return None if no config can be found
+robot.arm.PlanToConfiguration(config, execute=True)
+```
+
+The robot will plan a path to the position and orientation defined by the transformation matrix from its current pose and execute it as the ``execute = True`` paramater is provided. Every plan returns a trajectory. If you don't want to execute the trajectory right now, you should omit this parameter. If you want to save the trajectory and execute it later:
+```
+from prpy.rave import save_trajectory
+traj = robot.arm.PlanToEndEffectorPose(Tgoal)
+save_trajectory(traj,'/home/buddy/Desktop/my_new_traj.xml')
+```
+You can load this saved trajectory later. Beware, this trajectory is untimed. To execute this trajectory, we can run executePath(traj) which will time and preprocess it internally. Also if you are planning to exeucte saved trajectory later, the starting state of the robot should be the same as the starting state of the trajectory.
+```
+from prpy.rave import load_trajectory
+env = robot.GetEnvironment()
+traj = load_trajectory(env, '/home/buddy/Desktop/my_new_traj.xml')
+robot.ExecutePath(traj)
+```
+You can also plan the arm to a configuration.
+```
+angle = ([0.35, -0.5,0.5,0.75,-0.55,0.78,0.9]) 
+robot.arm.PlanToConfiguration(angle2, execute = True) 
+```
+There 
+
+
+
