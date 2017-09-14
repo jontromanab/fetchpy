@@ -50,7 +50,7 @@ The robot returned by fetchpy.initialize() is an OpenRAVE robot. This object pro
 * ``robot.arm`` : The 7DOF arm of the robot
 * ``robot.arm_torso`` : The 7DOF arm and the torso
 * ``robot.base`` : The non-holonomic base of the robot
-## Using the head ##
+## Using the Head ##
 The most basic option to move the head to a desired position is calling the MoveTo() function. This function can directly take joint values of the 'head_pan_joint' and 'head_tilt_joint'. The limts of head_pan_joint is [-1.57, 1.57] and head_tilt_joint is [-0.76, 1.45]. e.g. For looking at a position at the lower left, you can pass:
 ```
 robot.head.MoveTo([-1.42, 1.34])
@@ -72,3 +72,25 @@ or if you just want to get the index of the head joints:
 ```
 robot.head.GetIndices()
 ```
+## Using the Gripper ##
+The gripper of the Fetch robot can be easily controlled by the ``MoveHand()`` method and providing a value. 0.05 will open the gripper half-way
+```
+robot.gripper.MoveHand(0.05)
+```
+while 0.0 closes the gripper and 0.1 opens the gripper maximally
+The Gripper can also be opened and closed by NamedConfigurations
+```
+robot.gripper.MoveToNamedConfiguration('closed',execute = True)
+robot.gripper.MoveToNamedConfiguration('open',execute = True)
+```
+or by just commanding to open or close
+```
+robot.gripper.CloseHand()
+robot.gripper.OpenHand()
+```
+To obtain the indices and names of the gripper joints 
+```
+robot.gripper.GetFingerIndices()
+robot.gripper.GetJointNames()
+```
+## Using the Base ##
