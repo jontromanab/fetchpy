@@ -155,7 +155,10 @@ You can also plan the arm to a configuration.
 angle = ([0.35, -0.5,0.5,0.75,-0.55,0.78,0.9]) 
 robot.arm.PlanToConfiguration(angle2, execute = True) 
 ```
-
-
+There are also simple named configurations that can be easily setup. You can plan for a straight arm or docked arm configuration by:
+```
+robot.PlanToNamedConfiguration('arm_dock', execute=True)
+robot.PlanToNamedConfiguration('straight', execute=True)
+```
 
 
