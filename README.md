@@ -161,4 +161,9 @@ robot.arm.PlanToNamedConfiguration('arm_dock', execute=True)
 robot.arm.PlanToNamedConfiguration('straight', execute=True)
 ```
 
-
+## Using the arm and torso ##
+The arm and torso combined also makes a 8DOF manipulator where 7DOF is associated with the arm and 1 extra DOF is from the prismatic joint of the torso. The system calculates a 8DOF IK solution for planning with arm and torso. All the valid commands for arm manipulation can also be executed on this manipulator too. Though there are no named configurations for arm and torso, it can be easily incorporated. e.g. To plan and execute a trajectory defined by joint configuration:
+```
+angle = ([0.3, 0.35, -0.5,0.5,0.75,-0.55,0.78,0.9]) 
+robot.arm_torso.PlanToConfiguration(angle2, execute = True) 
+```
