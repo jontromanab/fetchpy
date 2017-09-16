@@ -169,3 +169,26 @@ robot.arm_torso.PlanToConfiguration(angle, execute = True)
 ```
 Though there are no named configurations for arm and torso, it can be easily incorporated. 
 **Beware: If you are controlling the robot in Gazebo, there is a bug in Fetch simulation controller(only). While planning for arm and torso and coming back to planning for arm, the torso suddenly goes down to 0.0 position. This bug is reported in** https://github.com/fetchrobotics/robot_controllers/issues/32 
+
+## Using the Whole Body(arm, torso and Base) ##
+Still in Progress. Coming Soon
+
+
+## Demo ##
+To view the capabilites of Fetchpy, the best starting point is pose_control.py. Run your roscore, start the real robot or robot in gazebo (roslaunch fetch_gazebo simulation.launch) and in a different terminal:
+```
+rosrun fetchpy pose_control.py
+```
+It will bring up this options window and you can perform different predefined actions on robot.
+```
+Press 0 to dock the arm.
+Press 1 to dock the arm and the torso.
+Press 2 to say something.
+Press 3 to straight the arm.
+Press 4 to go to cleaing wall.
+Press 5 to wave.
+Press 6 to do I love you.
+Press 7 to say Yes.
+Press 8 to say No.
+Press 9 to quit. 
+```
