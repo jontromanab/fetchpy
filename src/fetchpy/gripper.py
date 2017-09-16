@@ -138,6 +138,8 @@ class GRIPPER(EndEffector):
 
 
 	def OpenHand(self,timeout = None):
+		"""Opens the gripper by Release Fingers in task manipulation
+		"""
 		if self.simulated:
 			robot = self.manipulator.GetRobot()
 			p = openravepy.KinBody.SaveParameters
