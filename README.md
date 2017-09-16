@@ -153,7 +153,7 @@ robot.arm.PlanToEndEffectorOffset(direction, distance, execute=True)
 You can also plan the arm to a configuration.
 ```
 angle = ([0.35, -0.5,0.5,0.75,-0.55,0.78,0.9]) 
-robot.arm.PlanToConfiguration(angle2, execute = True) 
+robot.arm.PlanToConfiguration(angle, execute = True) 
 ```
 There are also simple named configurations that can be easily setup. You can plan for a straight arm or docked arm configuration by:
 ```
@@ -165,5 +165,5 @@ robot.arm.PlanToNamedConfiguration('straight', execute=True)
 The arm and torso combined also makes a 8DOF manipulator where 7DOF is associated with the arm and 1 extra DOF is from the prismatic joint of the torso. The system calculates a 8DOF IK solution for planning with arm and torso. All the valid commands for arm manipulation can also be executed on this manipulator too. Though there are no named configurations for arm and torso, it can be easily incorporated. e.g. To plan and execute a trajectory defined by joint configuration:
 ```
 angle = ([0.3, 0.35, -0.5,0.5,0.75,-0.55,0.78,0.9]) 
-robot.arm_torso.PlanToConfiguration(angle2, execute = True) 
+robot.arm_torso.PlanToConfiguration(angle, execute = True) 
 ```
