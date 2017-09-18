@@ -151,6 +151,8 @@ class GRIPPER(EndEffector):
 			self.MoveHand(value = 0.1)
 
 	def CloseHand(self,timeout = None):
+		"""Closes the gripper by Close Fingers in task manipulation
+		"""
 		if self.simulated:
 			robot = self.manipulator.GetRobot()
 			p = openravepy.KinBody.SaveParameters
