@@ -53,7 +53,7 @@ The robot returned by fetchpy.initialize() is an OpenRAVE robot. This object pro
 ## Using the Head ##
 The most basic option to move the head to a desired position is calling the MoveTo() function. This function can directly take joint values of the 'head_pan_joint' and 'head_tilt_joint'. The limts of head_pan_joint is [-1.57, 1.57] and head_tilt_joint is [-0.76, 1.45]. e.g. For looking at a position at the lower left, you can pass:
 ```
-robot.head.MoveTo([-1.42, 1.34])
+robot.head.MoveTo([1.42, 0.7])
 ```
 You can also move the robot head to presaved positions by:
 ```
