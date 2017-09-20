@@ -66,7 +66,6 @@ class BaseVelocityController(OrController):
 		if not self.IsDone():
 			self.logger.warning('Base controller is alreday in progress. You should wait')
 		vel = or_traj_to_ros_vel(self.robot, traj)
-		print 'There are: '+str(len(vel))+' velocity points'
 		vel0 = vel[0]
 		for i in vel:
 			final_base_goal = [a - b for a, b in zip(i, vel[0])]
