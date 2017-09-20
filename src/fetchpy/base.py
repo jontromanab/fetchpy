@@ -21,7 +21,17 @@ def or_traj_to_ros_vel(robot,traj):
 		vel.append(vel_imd)
 	return vel
 
+def create_affine_trajectory(robot, poses):
+    doft = openravepy.DOFAffine.X | openravepy.DOFAffine.Y | openravepy.DOFAffine.RotationAxis
+    cspec = openravepy.RaveGetAffineConfigurationSpecification(doft, robot)
+    traj = openravepy.RaveCreateTrajectory(robot.GetEnv(), 'GenericTrajectory')
+    traj.Init(cspec)
 
+    for iwaypoint, pose in enumerate(poses):
+        waypoint = openravepy.RaveGetAffineDOFValuesFromTransform(pose, doft)
+	traj.Insert(iwaypoint, waypoint)
+
+    return traj
 
 class BaseVelocityPublisher(object):
 	def __init__(self, ns, controller_name, timeout = 0.0):
@@ -32,7 +42,7 @@ class BaseVelocityPublisher(object):
 	def execute(self, vel):
 		goal_msg = Twist()
 		curr_vel = [0.0, 0.0]
-		disc_vel = numpy.array(vel*10)
+		disc_vel = numpy.array(vel)
 		for i in range(10):
 			goal_msg.linear.x = disc_vel[0]
 			goal_msg.angular.z = disc_vel[1]
@@ -56,9 +66,13 @@ class BaseVelocityController(OrController):
 		if not self.IsDone():
 			self.logger.warning('Base controller is alreday in progress. You should wait')
 		vel = or_traj_to_ros_vel(self.robot, traj)
-		self.logger.info('Moving by: {}'.format(vel[1]))
+		print 'There are: '+str(len(vel))+' velocity points'
+		vel0 = vel[0]
 		for i in vel:
-			self._current_cmd = self.Publisher.execute(i)
+			final_base_goal = [a - b for a, b in zip(i, vel[0])]
+			self.logger.info('Moving by: {}'.format(final_base_goal))
+			self._current_cmd = self.Publisher.execute(final_base_goal)
+			vel0 = final_base_goal
 
 	def SetDesired(self,vel):
 		if not self.IsDone():
@@ -101,14 +115,17 @@ class BASE(MobileBase):
 		
 
 	def Move(self, vel, execute = True, timeout = None, **kwargs):
-		if self.simulated:
-			self.Rotate(vel[1])
-			self.Forward(vel[0])
-			
-		else:
-			self.controller.SetDesired(vel)
-			is_done = prpy.util.WaitForControllers([self.controller], timeout=
-					timeout)
+		direction = numpy.array([ 1., 0., 0. ])
+		with self.robot.GetEnv():
+			start_pose = self.robot.GetTransform()
+			offset_pose = numpy.eye(4)
+			offset_pose[0:3, 3] = vel[0] * direction
+			transl_pose = numpy.dot(start_pose, offset_pose)
+			relative_pose = openravepy.matrixFromAxisAngle([vel[0], 0.,vel[1]])
+			goal_pose = numpy.dot(transl_pose, relative_pose)
+		traj = create_affine_trajectory(self.robot, [ start_pose, goal_pose ])
+		self.robot.ExecutePath(traj, **kwargs)
+
 
 	def DriveAlongVector(self, direction, goal_pos):
 		"""
@@ -123,19 +140,4 @@ class BASE(MobileBase):
 		des_angle = numpy.arctan2(direction[1], direction[0])
 		self.Rotate(des_angle - cur_angle)
 		self.Forward(distance)
-
-
-
-
-
-
-
-
-
-
-
-
-		
-
-
 
