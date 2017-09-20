@@ -341,12 +341,10 @@ class FETCHRobot(Robot):
         # repeat logic and actually construct controller clients
         # now that we've activated them on the robot
         if 'arm_controller' in controllers_manip:
-            print 'Arm am being called'
             active_controllers.append(RewdOrTrajectoryController(self, '',
                 'arm_controller',self.arm.GetJointNames()))
 
         if 'arm_with_torso_controller' in controllers_manip:
-            print 'Arm_torso am being called'
             active_controllers.append(RewdOrTrajectoryController(self, '',
                 'arm_with_torso_controller',self.arm_torso.GetJointNames()))
 
@@ -396,26 +394,3 @@ class FETCHRobot(Robot):
             self.soundhandle.say(words)
             rospy.sleep(1)
             
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
