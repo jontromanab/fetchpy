@@ -171,7 +171,11 @@ Though there are no named configurations for arm and torso, it can be easily inc
 **Beware: If you are controlling the robot in Gazebo, there is a bug in Fetch simulation controller(only). While planning for arm and torso and coming back to planning for arm, the torso suddenly goes down to 0.0 position. This bug is reported in** https://github.com/fetchrobotics/robot_controllers/issues/32 
 
 ## Using the Whole Body(arm, torso and Base) ##
-Still in Progress. Coming Soon
+The whole body controller is tailered to control arm, torso and base at the same time. For a simple example, to move the whole body by configuration(the last two values are robot base linear and angular velocity:
+```
+angle = ([0.3, 0.35, -0.5,0.5,0.75,-0.55,0.78,0.9, 0.2, 0.1]) 
+robot.whole_body.PlanToConfiguration(angle, execute = True) 
+```
 
 
 ## Demo ##
