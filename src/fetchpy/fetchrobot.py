@@ -295,8 +295,8 @@ class FETCHRobot(Robot):
         needs_base = prpy.util.HasAffineDOFs(cspec)
         needs_joints = prpy.util.HasJointDOFs(cspec)
         
-        if needs_base and needs_joints:
-            raise ValueError('Trajectories with affine and joint DOFs are not supported')
+        #if needs_base and needs_joints:
+            #raise ValueError('Trajectories with affine and joint DOFs are not supported')
 
         # Check that the current configuration of the robot matches the
         # initial configuration specified by the trajectory.
@@ -323,7 +323,7 @@ class FETCHRobot(Robot):
         active_controllers = []
 
         #Implementing different logic to determine which manipulator we want
-        if (needs_joints):
+        if (needs_joints) and not needs_base:
             if 11 in prpy.util.GetTrajectoryIndices(traj):
                 #11 is DOF index of toso lift joint
                 if not self.arm_torso.IsSimulated():
@@ -348,13 +348,18 @@ class FETCHRobot(Robot):
             active_controllers.append(RewdOrTrajectoryController(self, '',
                 'arm_with_torso_controller',self.arm_torso.GetJointNames()))
 
-        if needs_base:
+        if needs_base and not needs_joints:
             if(hasattr(self,'base') and hasattr(self.base,'controller') and
                 self.base.controller is not None):
                 active_controllers.append(self.base.controller)
             else:
                 logger.warning('Trajectory includes the base, but no base controller is'
                     'available. Is self.base.controller set?')
+
+        #For whole body (arm+torso+base)
+        if needs_base and needs_joints:
+            print ' we are in whole body control. Yeah'
+            active_controllers.append(self.whole_body.controller)
 
         ##ADD HERE ALL THE CONTROLLERS (change)
         for controller in active_controllers:
@@ -394,3 +399,26 @@ class FETCHRobot(Robot):
             self.soundhandle.say(words)
             rospy.sleep(1)
             
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -79,9 +79,9 @@ def createGolGol(pose, radius):
     return poses
 
 def createPattern(pose, length, num):
-    poses = createGolGol(pose, length)
+    poses = createZigZagHalf(pose, length)
     for i in range(num-1):
-        add_poses = createGolGol(poses[-1], length)
+        add_poses = createZigZagHalf(poses[-1], length)
         for j in add_poses:
             poses.append(j)
     return poses
@@ -296,34 +296,13 @@ def executeVelPath(robot, pose, handles,unitTime = 1.0,joint_velocity_limits=Non
         robot.SetAffineRotationAxisMaxVels(np.ones(4))
 
         finalgoal = getGoalToExecute(robot, pose, unitTime)
-        #print 'I am here'
-        #print finalgoal
-        #q_arm = finalgoal[1:8]
-        #robot.arm.PlanToConfiguration(q_arm, execute = True) 
         basemanip.MoveActiveJoints(goal=finalgoal,maxiter=5000,steplength=1,maxtries=2)
-        #print finalgoal
-        #print 'size of finalgoal:'+str(len(finalgoal))
-        imd_goal = []
-        for i in range(len(finalgoal)):
-        	if i != (8):
-        		imd_goal.append(finalgoal[i]) 
-
-        #print imd_goal
-        finalgoal2 =[]
-        for i in range(len(imd_goal)):
-        	if i>6:
-        		finalgoal2.append(imd_goal[i]/20.0)
-        	else:
-        		finalgoal2.append(imd_goal[i])
-
-
-        robot.whole_body.Move(finalgoal2)
-        
+              
         pl = plottingPoints(robot.GetEnv(),handles)
         pl.plotPoint(transformToPose(TeeBase), 0.01, yellow)
         pl.plotPoint(transformToPose(Tee_gripper), 0.01, blue)
     waitrobot(robot)
-    return transformToPose(Tee), transformToPose(TeeBase)
+    return transformToPose(Tee), transformToPose(TeeBase), finalgoal
     
 def executePath(robot, path, resolution, handles):
     print 'path: '+str(len(path))
@@ -335,13 +314,65 @@ def executePath(robot, path, resolution, handles):
     base_poses = []
     all_poses = []
     all_poses.append(dis_poses)
+    #basegoal= [0,0];
+    base_goal = []
+    arm_goal =[]
     for i in range(len(dis_poses)-1):
         #print ">>>>>>>>Iteration "+str(i)+"<<<<<<<<<<<<<<"
-        pose, base_pose = executeVelPath(robot, dis_poses[i+1], handles)
+        pose, base_pose, finalgoal = executeVelPath(robot, dis_poses[i+1], handles)
+        arm_goal.append(finalgoal[ :7])
+        base_goal.append(finalgoal[-3: ])
+
+
+
+        # imd_goal = []
+        # for i in range(len(finalgoal)):
+        #     if i != (7):
+        #         imd_goal.append(finalgoal[i]) 
+
+        # #print imd_goal
+        # finalgoal2 =[]
+        # for i in range(len(imd_goal)):
+        #     if i>6:
+        #         final_base_goal = [a - b for a, b in zip(imd_goal, basegoal)]
+        #         for j in final_base_goal:
+        #             finalgoal2.append(j*10.0)
+        #     else:
+        #         finalgoal2.append(imd_goal[i])
+
+        # basegoal = imd_goal
+        # robot.whole_body.Move(finalgoal2)
+        #print 'linear: '+str(finalgoal2[7]) + 'angular: '+str(finalgoal2[8])
         poses.append(pose)
         base_poses.append(base_pose)
     all_poses.append(poses) 
     all_poses.append(base_poses) 
+    print 'size of base points: '+str(len(base_goal))
+    print 'size of arm points: '+str(len(arm_goal))
+    from prpy.rave import save_trajectory
+
+
+    #Creating base Traj
+    doft = openravepy.DOFAffine.X | openravepy.DOFAffine.Y | openravepy.DOFAffine.RotationAxis
+    cspec = openravepy.RaveGetAffineConfigurationSpecification(doft, robot)
+    base_traj = openravepy.RaveCreateTrajectory(robot.GetEnv(), 'GenericTrajectory')
+    base_traj.Init(cspec)
+    for i in range(len(base_goal)):
+        base_traj.Insert(i, base_goal[i])
+    save_trajectory(base_traj,'/home/abhi/Desktop/traj2/base_untimed_traj.xml')
+    print 'base_traj saved'
+
+    #Creating Arm Traj
+    jointnames=['shoulder_pan_joint','shoulder_lift_joint','upperarm_roll_joint','elbow_flex_joint','forearm_roll_joint','wrist_flex_joint','wrist_roll_joint']
+    robot.SetActiveDOFs([robot.GetJoint(name).GetDOFIndex() for name in jointnames],)
+    acspec = robot.GetActiveConfigurationSpecification('linear')
+    arm_traj = openravepy.RaveCreateTrajectory(robot.GetEnv(), '')
+    arm_traj.Init(acspec)
+    for i in range(len(arm_goal)):
+        arm_traj.Insert(i, arm_goal[i])
+    save_trajectory(arm_traj,'/home/abhi/Desktop/traj2/arm_untimed_traj.xml')
+    print 'arm_traj saved'
+
     return all_poses
          
 
@@ -386,7 +417,7 @@ if __name__ == '__main__':
 		# with env:
 		# 	robot.Grab(env.GetKinBody('testbody3'))
 
-		raw_input("Press enter to continue...")
+		#raw_input("Press enter to continue...")
 
 		to_Table = ([0.70503065, -0.81321057,  0.44084394,  1.52903305, -0.37976212,0.92392059,  0.8291418])
 		robot.arm.PlanToConfiguration(to_Table, execute = True) 
@@ -394,8 +425,9 @@ if __name__ == '__main__':
 		raw_input("Press enter to continue...")
 
 
-		#poses = createPattern(transformToPose(getTransform('gripper_link')),0.03,2)
-		poses = createHalfCircleWholeWallPattern(transformToPose(getTransform('gripper_link')))
+		poses = createPattern(transformToPose(getTransform('gripper_link')),200,4)
+		#poses = createHalfCircleWholeWallPattern(transformToPose(getTransform('gripper_link')))
+
 		pl = plottingPoints(robot.GetEnv(),handles)
 		pl.plotPoints(poses, 0.005, pink)
 		stat_trns = getTransformBetweenLinks('wrist_roll_link','gripper_link')
