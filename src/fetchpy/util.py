@@ -17,7 +17,7 @@ def or_traj_to_ros_vel(robot,traj):
 	for iwaypoint in xrange(traj.GetNumWaypoints()):
 		waypoint = traj.GetWaypoint(iwaypoint)
 		#affdofvalues = cspec.ExtractAffineValues(waypoint, robot, 11, 1)
-		if len(waypoint)<=3:
+		if len(waypoint)<=7:
 			affdofvalues = cspec.ExtractAffineValues(waypoint, robot, 11, 1)
 		else:
 			affdofvalues = waypoint[16:19]
