@@ -24,7 +24,7 @@ class WholeBodyController(object):
 		self.robot = robot
 		self.client_ = actionlib.SimpleActionClient("/arm_with_torso_controller/follow_joint_trajectory", FollowJointTrajectoryAction,)
 		self.Publisher = BaseVelocityPublisher(ns, 'base_controller', timeout)
-		self.pub_ = rospy.Publisher('/base_controller/command', Twist, queue_size=1)
+		#self.pub_ = rospy.Publisher('/base_controller/command', Twist, queue_size=1)
 		self._current_cmd = None
 
 	def createArmTrajectory(self, values):
@@ -68,7 +68,7 @@ class WholeBodyController(object):
 		for iwaypoint in xrange(traj.GetNumWaypoints()):
 			waypoint = traj.GetWaypoint(iwaypoint)
 			q = waypoint[:8]
-			qd = waypoint[8:16]
+			qd = waypoint[11:19]
 			qdd = [0.] * 8
 			dt = waypoint[-1]
 			time_from_start += dt
