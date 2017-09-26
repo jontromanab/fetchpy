@@ -94,18 +94,18 @@ robot.gripper.GetFingerIndices()
 robot.gripper.GetJointNames()
 ```
 ## Using the Base ##
-To Move the base, the velocity can be set as:
+Before start moving the base please consider the environment, it does not detect/avoid any obstacles in real world. To Move the base, the position can be set as:
 ```
-robot.base.Move([1.0, 0.5])
+robot.base.Move([1.0, 0.5], execute = True)
 ```
 while the first component is translation in x-direction, and the second component is rotation is z-direction. Due the non-holonomic condition, the robot can only be moved in this two directions.
 To move the base forward or backward
 ```
-robot.base.Forward(-0.5)
+robot.base.Forward(-0.5, execute = True)
 ```
 or to rotate the base
 ```
-robot.base.Rotate(0.5)
+robot.base.Rotate(0.5, execute = True)
 ```
 
 ## Using the arm ##
