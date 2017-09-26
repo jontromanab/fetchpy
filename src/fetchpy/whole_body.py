@@ -85,14 +85,21 @@ class WholeBodyController(object):
 		goal_msg = FollowJointTrajectoryGoal()
 		goal_msg.trajectory = traj_msg
 		
-		positions,time = util.or_traj_to_ros_vel(self.robot, traj)
+		positions,times = util.or_traj_to_ros_vel(self.robot, traj)
 		self.client_.send_goal(goal_msg)
-		self.Publisher.executeTraj(positions)
-		# for i in positions:
-		# 	final_base_goal = [a - b for a, b in zip(i, curr_pos)]
-		# 	#self.logger.info('Moving by: {}'.format(final_base_goal))
-		# 	self._current_cmd = self.Publisher.execute(final_base_goal)
-		# 	curr_pos = i
+		curr_pos= positions[0]
+		curr_time = times[0]
+		
+		for i in range(len(positions)-1):
+			final_base_goal = [a - b for a, b in zip(positions[i+1], curr_pos)]
+			final_time_goal = times[i+1] - curr_time
+			final_vel_goal = [j/final_time_goal for j in final_base_goal]
+			#self.logger.info('Moving by: {}'.format(final_vel_goal))
+			self._current_cmd = self.Publisher.execute(final_vel_goal,final_time_goal) 
+			curr_pos = positions[i+1]
+			curr_time = times[i+1]
+		#self.Publisher.executeTraj(positions)
+		
 		
 
 
@@ -138,8 +145,9 @@ class WholeBody():
 		arm_joint_values = values[:8]
 		base_affine_values = values[-2:]
 		arm_traj = self.robot.arm_torso.PlanToConfiguration(arm_joint_values)
-		self.robot.SetActiveDOFs([self.robot.GetJoint(name).GetDOFIndex() for name in self.controller.GetJointNames()],DOFAffine.X|DOFAffine.Y|DOFAffine.RotationAxis)
-		traj = util.create_whole_body_trajectory(self.robot, arm_traj, base_affine_values)
+		base_traj = self.robot.base.Move(base_affine_values)
+		#self.robot.SetActiveDOFs([self.robot.GetJoint(name).GetDOFIndex() for name in self.controller.GetJointNames()],DOFAffine.X|DOFAffine.Y|DOFAffine.RotationAxis)
+		traj = util.create_whole_body_trajectory(self.robot, arm_traj, base_traj)
 		if(execute):
 			self.robot.ExecuteTrajectory(traj, **kwargs)
 		else:
