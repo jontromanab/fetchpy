@@ -358,8 +358,13 @@ class FETCHRobot(Robot):
 
         #For whole body (arm+torso+base)
         if needs_base and needs_joints:
-            print ' we are in whole body control. Yeah'
-            active_controllers.append(self.whole_body.controller)
+            #print ' we are in whole body control. Yeah'
+            if self.whole_body.IsSimulated():
+                active_controllers.append(self.arm_torso.sim_controller)
+                active_controllers.append(self.arm.sim_controller)
+                active_controllers.append(self.base.controller)
+            else:
+                active_controllers.append(self.whole_body.controller)
 
         ##ADD HERE ALL THE CONTROLLERS (change)
         for controller in active_controllers:

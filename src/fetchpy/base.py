@@ -17,17 +17,36 @@ class BaseVelocityPublisher(object):
 	def __init__(self, ns, controller_name, timeout = 0.0):
 		self.log = logging.getLogger(__name__)
 		as_name = ns + '/' + controller_name+'/command'
-		self._pub = rospy.Publisher(as_name,Twist, queue_size=1)
+		self._pub = rospy.Publisher(as_name,Twist, queue_size=10)
 
-	def execute(self, vel):
+	def execute(self, vel, time = 1.0):
 		goal_msg = Twist()
 		curr_vel = [0.0, 0.0]
 		disc_vel = numpy.array(vel)
-		for i in range(10):
-			goal_msg.linear.x = disc_vel[0]
-			goal_msg.angular.z = disc_vel[1]
+		curr_time = rospy.Time.now()
+		var_time = rospy.Time.now()
+		goal_msg.linear.x = disc_vel[0]
+		goal_msg.angular.z = disc_vel[1]
+		while(var_time - curr_time <rospy.Duration.from_sec(time)):
 			self._pub.publish(goal_msg)
-			rospy.sleep(0.1)
+			var_time = rospy.Time.now()
+
+
+		# for i in range(10):
+		# 	goal_msg.linear.x = disc_vel[0]
+		# 	goal_msg.angular.z = disc_vel[1]
+		# 	#print 'goal_msg'+str(goal_msg.linear.x)+" , "+str(goal_msg.angular.z)
+		# 	self._pub.publish(goal_msg)
+		# 	rospy.sleep(0.1)
+
+
+	def executeTraj(self, positions):
+		curr_pos = positions[0]
+		for i in positions:
+			final_base_goal = [a - b for a, b in zip(i, curr_pos)]
+			#self.logger.info('Moving by: {}'.format(final_base_goal))
+			self.execute(final_base_goal)
+			curr_pos = i
 
 class BaseVelocityController(OrController):
 	def __init__(self, namespace, robot, controller_name, simulated = False, timeout = 10.0):
@@ -45,14 +64,19 @@ class BaseVelocityController(OrController):
 	def SetPath(self, traj):
 		if not self.IsDone():
 			self.logger.warning('Base controller is alreday in progress. You should wait')
-		vel = util.or_traj_to_ros_vel(self.robot, traj)
-		vel0 = vel[0]
-		for i in vel:
-			final_base_goal = [a - b for a, b in zip(i, vel[0])]
-			self.logger.info('Moving by: {}'.format(final_base_goal))
-			self._current_cmd = self.Publisher.execute(final_base_goal)
-			vel0 = final_base_goal
-		print 'There are: '+str(len(vel))+' velocity points'
+		positions, time = util.or_traj_to_ros_vel(self.robot, traj)
+		curr_pos= positions[0]
+		curr_time = time[0]
+		
+		for i in range(len(positions)-1):
+			final_base_goal = [a - b for a, b in zip(positions[i+1], curr_pos)]
+			final_time_goal = time[i+1] - curr_time
+			final_vel_goal = [j/final_time_goal for j in final_base_goal]
+			self.logger.info('Moving by: {}'.format(final_vel_goal))
+			self._current_cmd = self.Publisher.execute(final_vel_goal,final_time_goal) 
+			curr_pos = positions[i+1]
+			curr_time = time[i+1]
+		#print 'There are: '+str(len(positions))+' position points'
 
 	def SetDesired(self,vel):
 		if not self.IsDone():
@@ -84,12 +108,12 @@ class BASE(MobileBase):
 	def CloneBindings(self, parent):
 		MobileBase.CloneBindings(self, parent)
 
-	def Forward(self, meters, execute = True, timeout= None, **kwargs):
+	def Forward(self, meters, execute = False, timeout= None, **kwargs):
 		return MobileBase.Forward(self, meters, execute=execute,
 				timeout=timeout, **kwargs)
 		
 
-	def Rotate(self, angle_rad, execute = True, timeout = None, **kwargs):
+	def Rotate(self, angle_rad, execute = False, timeout = None, **kwargs):
 		return MobileBase.Rotate(self, angle_rad, execute=execute,
 				timeout=timeout, **kwargs)
 		

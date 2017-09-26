@@ -12,20 +12,25 @@ from prpy.rave import save_trajectory
 logger = logging.getLogger('fetchpy')
 
 def or_traj_to_ros_vel(robot,traj):
-	vel = []
+	positions = []
+	time = []
 	cspec = traj.GetConfigurationSpecification()
 	for iwaypoint in xrange(traj.GetNumWaypoints()):
 		waypoint = traj.GetWaypoint(iwaypoint)
 		#affdofvalues = cspec.ExtractAffineValues(waypoint, robot, 11, 1)
 		if len(waypoint)<=7:
 			affdofvalues = cspec.ExtractAffineValues(waypoint, robot, 11, 1)
+			dt = cspec.ExtractDeltaTime(waypoint)
+			time.append(dt)
 		else:
 			affdofvalues = waypoint[16:19]
+
 		vel_imd = []
 		vel_imd.append(affdofvalues[0])
 		vel_imd.append(affdofvalues[2])
-		vel.append(vel_imd)
-	return vel
+		#print vel_imd
+		positions.append(vel_imd)
+	return positions, time
 
 def create_affine_trajectory(robot, poses):
     doft = openravepy.DOFAffine.X | openravepy.DOFAffine.Y | openravepy.DOFAffine.RotationAxis

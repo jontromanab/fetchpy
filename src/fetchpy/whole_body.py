@@ -24,6 +24,7 @@ class WholeBodyController(object):
 		self.robot = robot
 		self.client_ = actionlib.SimpleActionClient("/arm_with_torso_controller/follow_joint_trajectory", FollowJointTrajectoryAction,)
 		self.Publisher = BaseVelocityPublisher(ns, 'base_controller', timeout)
+		self.pub_ = rospy.Publisher('/base_controller/command', Twist, queue_size=1)
 		self._current_cmd = None
 
 	def createArmTrajectory(self, values):
@@ -83,20 +84,36 @@ class WholeBodyController(object):
         )
 		goal_msg = FollowJointTrajectoryGoal()
 		goal_msg.trajectory = traj_msg
+		
+		positions,time = util.or_traj_to_ros_vel(self.robot, traj)
 		self.client_.send_goal(goal_msg)
-
-		vel = util.or_traj_to_ros_vel(self.robot, traj)
-		vel0 = vel[0]
-		for i in vel:
-			final_base_goal = [a - b for a, b in zip(i, vel[0])]
-			self.logger.info('Moving by: {}'.format(final_base_goal))
-			self._current_cmd = self.Publisher.execute(final_base_goal)
-			vel0 = final_base_goal
+		self.Publisher.executeTraj(positions)
+		# for i in positions:
+		# 	final_base_goal = [a - b for a, b in zip(i, curr_pos)]
+		# 	#self.logger.info('Moving by: {}'.format(final_base_goal))
+		# 	self._current_cmd = self.Publisher.execute(final_base_goal)
+		# 	curr_pos = i
 		
 
 
 	def IsDone(self):
 		return self._current_cmd is None or self._current_cmd.done()
+
+	def execute(self, values):
+ 		#print 'I am executing: '+str(values)
+		goal_msg_base = Twist()
+		vel = values[-2:]
+		goal_msg_base.linear.x = vel[0]
+		goal_msg_base.angular.z = vel[1]
+		#print goal_msg_base
+		arm_traj = self.createArmTrajectory(values[:-2])
+		goal_msg = FollowJointTrajectoryGoal()
+		goal_msg.trajectory = arm_traj
+		self.Publisher.execute(vel)
+		self.client_.send_goal(goal_msg)
+		#self.client_.wait_for_result()
+		#self.pub_.publish(goal_msg_base)
+		#self.Publisher.execute(vel)
 
 
 
@@ -111,6 +128,9 @@ class WholeBody():
 		self.logger = logging.getLogger(__name__)
 		self.robot = robot
 		self.controller = WholeBodyController('',self.robot,sim)
+		
+	def IsSimulated(self):
+		return self.simulated
 
 
 	def PlanToConfiguration(self, values, execute = False, timeout = None, **kwargs):
@@ -124,6 +144,9 @@ class WholeBody():
 			self.robot.ExecuteTrajectory(traj, **kwargs)
 		else:
 			return traj
+
+	def Move(self, joint_values):
+		self.controller.execute(joint_values)
 
 
 
