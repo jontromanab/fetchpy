@@ -40,13 +40,6 @@ class BaseVelocityPublisher(object):
 		# 	rospy.sleep(0.1)
 
 
-	def executeTraj(self, positions):
-		curr_pos = positions[0]
-		for i in positions:
-			final_base_goal = [a - b for a, b in zip(i, curr_pos)]
-			#self.logger.info('Moving by: {}'.format(final_base_goal))
-			self.execute(final_base_goal)
-			curr_pos = i
 
 class BaseVelocityController(OrController):
 	def __init__(self, namespace, robot, controller_name, simulated = False, timeout = 10.0):
