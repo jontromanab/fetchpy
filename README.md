@@ -94,11 +94,11 @@ robot.gripper.GetFingerIndices()
 robot.gripper.GetJointNames()
 ```
 ## Using the Base ##
-Before start moving the base please consider the environment, it does not detect/avoid any obstacles in real world. To Move the base, the position can be set as:
+Before start moving the base, please consider the environment. It does not detect/avoid any obstacles in real world (support due). To Move the base, the position can be set as:
 ```
 robot.base.Move([1.0, 0.5], execute = True)
 ```
-while the first component is translation in x-direction, and the second component is rotation is z-direction. Due the non-holonomic condition, the robot can only be moved in this two directions.
+while the first component is translation in x-direction, and the second component is rotation is z-direction. Due the non-holonomic condition, the robot can only be moved in this two axes.
 To move the base forward or backward
 ```
 robot.base.Forward(-0.5, execute = True)
