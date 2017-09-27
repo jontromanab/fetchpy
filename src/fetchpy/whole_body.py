@@ -1,7 +1,8 @@
-import numpy, openravepy, logging
+import openravepy, logging
 import prpy, time, rospy
 from openravepy import *
 import actionlib
+import numpy as np
 
 from .head import FollowJointTrajectoryController
 from .base import BaseVelocityController
@@ -59,46 +60,81 @@ class WholeBodyController(object):
 		return jointnames
 
 	def SetPath(self, traj):
-		cspec = traj.GetConfigurationSpecification()
-		dof_indices, _ = cspec.ExtractUsedIndices(self.robot)
-		time_from_start = 0.
-		prev_time_from_start = 0.
-		traj_msg = JointTrajectory()
-		traj_msg.joint_names = self.GetJointNames()
-		for iwaypoint in xrange(traj.GetNumWaypoints()):
-			waypoint = traj.GetWaypoint(iwaypoint)
-			q = waypoint[:8]
-			qd = waypoint[11:19]
-			qdd = [0.] * 8
-			dt = waypoint[-1]
-			time_from_start += dt
-			deltatime = time_from_start - prev_time_from_start
-			prev_time_from_start = time_from_start
-			traj_msg.points.append(
-            JointTrajectoryPoint(
-                positions=list(q),
-                velocities=list(qd) if qd is not None else [],
-                accelerations=list(qdd) if qdd is not None else [],
-                time_from_start=Duration.from_sec(time_from_start)
-            )
-        )
-		goal_msg = FollowJointTrajectoryGoal()
-		goal_msg.trajectory = traj_msg
+		# cspec = traj.GetConfigurationSpecification()
+		# dof_indices, _ = cspec.ExtractUsedIndices(self.robot)
+		# time_from_start = 0.
+		# prev_time_from_start = 0.
+		# traj_msg = JointTrajectory()
+		# traj_msg.joint_names = self.GetJointNames()
+		# for iwaypoint in xrange(traj.GetNumWaypoints()):
+		# 	waypoint = traj.GetWaypoint(iwaypoint)
+		# 	q = waypoint[:8]
+		# 	qd = waypoint[11:19]
+		# 	qdd = [0.] * 8
+		# 	dt = waypoint[-1]
+		# 	time_from_start += dt
+		# 	deltatime = time_from_start - prev_time_from_start
+		# 	prev_time_from_start = time_from_start
+		# 	traj_msg.points.append(
+  #           JointTrajectoryPoint(
+  #               positions=list(q),
+  #               velocities=list(qd) if qd is not None else [],
+  #               accelerations=list(qdd) if qdd is not None else [],
+  #               time_from_start=Duration.from_sec(time_from_start)
+  #           )
+  #       )
+		# goal_msg = FollowJointTrajectoryGoal()
+		# goal_msg.trajectory = traj_msg
 		
 		positions,times = util.or_traj_to_ros_vel(self.robot, traj)
-		self.client_.send_goal(goal_msg)
+		#self.client_.send_goal(goal_msg)
 		curr_pos= positions[0]
 		curr_time = times[0]
+
+
+		arm_curr = traj.GetWaypoint(0)
+
+		dt = 0.0
 		
 		for i in range(len(positions)-1):
 			final_base_goal = [a - b for a, b in zip(positions[i+1], curr_pos)]
 			final_time_goal = times[i+1] - curr_time
 			final_vel_goal = [j/final_time_goal for j in final_base_goal]
-			#self.logger.info('Moving by: {}'.format(final_vel_goal))
+			self.logger.info('Moving by: {}'.format(final_vel_goal))
+
+			waypoint = traj.GetWaypoint(i)
+			acc = np.zeros(8)
+			next_waypoint = traj.GetWaypoint(i+1)
+			goal_msg = FollowJointTrajectoryGoal()
+			traj_msg = JointTrajectory()
+			traj_msg.joint_names = self.GetJointNames()
+			traj_msg.points = []
+
+			start_point = JointTrajectoryPoint()
+			start_point.positions = waypoint[:8]
+			start_point.velocities = waypoint[11:19]
+			start_point.accelerations = acc
+			start_point.time_from_start = rospy.Duration.from_sec(0.0)
+			traj_msg.points.append(start_point)
+
+			end_point = JointTrajectoryPoint()
+			end_point.positions = next_waypoint[:8]
+			end_point.velocities = next_waypoint[11:19]
+			end_point.accelerations = acc
+			end_point.time_from_start = rospy.Duration.from_sec(next_waypoint[-1]-dt)
+			traj_msg.points.append(end_point)
+			goal_msg.trajectory = traj_msg
+			dt = next_waypoint[-1]
+
+			#print 'start_time'+str(start_point.time_from_start)
+			#print 'end_time'+str(end_point.time_from_start)
+			self.client_.send_goal(goal_msg)
 			self._current_cmd = self.Publisher.execute(final_vel_goal,final_time_goal) 
 			curr_pos = positions[i+1]
 			curr_time = times[i+1]
-		#self.Publisher.executeTraj(positions)
+
+		print 'we have: '+str(len(positions)) + ' base positions'
+		
 		
 		
 
@@ -147,7 +183,7 @@ class WholeBody():
 		arm_traj = self.robot.arm_torso.PlanToConfiguration(arm_joint_values)
 		base_traj = self.robot.base.Move(base_affine_values)
 		#self.robot.SetActiveDOFs([self.robot.GetJoint(name).GetDOFIndex() for name in self.controller.GetJointNames()],DOFAffine.X|DOFAffine.Y|DOFAffine.RotationAxis)
-		traj = util.create_whole_body_trajectory(self.robot, arm_traj, base_traj)
+		
 		if(execute):
 			self.robot.ExecuteTrajectory(traj, **kwargs)
 		else:

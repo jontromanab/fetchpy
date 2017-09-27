@@ -112,6 +112,8 @@ def RetimeWholeBodyTrajectory(robot, arm_traj, base_traj):
 
 	base_num_of_way = base_final_traj.GetNumWaypoints()
 	arm_num_of_way = arm_final_traj.GetNumWaypoints()
+	print 'base has '+str(base_num_of_way)+' waypoints'
+	print 'arm has '+str(arm_num_of_way)+' waypoints'
 	a_cspec = arm_final_traj.GetConfigurationSpecification()
 	b_cspec = base_final_traj.GetConfigurationSpecification()
 
@@ -205,6 +207,11 @@ def RetimeWholeBodyTrajectory(robot, arm_traj, base_traj):
 
 def create_whole_body_trajectory(robot, arm_traj, base_traj):
 	env = arm_traj.GetEnv()
+	base_num = base_traj.GetNumWaypoints()
+	print 'base has '+str(base_num)+' waypoints'
+	arm_num = arm_traj.GetNumWaypoints()
+	print 'arm has '+str(arm_num)+' waypoints'
+
 	whole_timed_traj = RetimeWholeBodyTrajectory(robot, arm_traj, base_traj)
 	save_trajectory(whole_timed_traj,'/home/abhi/Desktop/traj2/whole_body_timed_traj.xml')
 	#save_trajectory(arm_timed_traj,'/home/abhi/Desktop/traj2/arm_timed_traj.xml')
