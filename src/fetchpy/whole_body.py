@@ -7,6 +7,8 @@ import numpy as np
 from .head import FollowJointTrajectoryController
 from .base import BaseVelocityController
 
+from prpy.controllers import RewdOrTrajectoryController
+
 from control_msgs.msg import (FollowJointTrajectoryAction, FollowJointTrajectoryGoal)
 from trajectory_msgs.msg import JointTrajectoryPoint, JointTrajectory
 from sensor_msgs.msg import JointState
@@ -26,6 +28,9 @@ class WholeBodyController(object):
 		self.client_ = actionlib.SimpleActionClient("/arm_with_torso_controller/follow_joint_trajectory", FollowJointTrajectoryAction,)
 		self.Publisher = BaseVelocityPublisher(ns, 'base_controller', timeout)
 		#self.pub_ = rospy.Publisher('/base_controller/command', Twist, queue_size=1)
+		self.base_controller = BaseVelocityController('',self.robot, 'base_controller')
+		self.arm_with_torso_controller = RewdOrTrajectoryController(self, '',
+                'arm_with_torso_controller',self.robot.arm_torso.GetJointNames())
 		self._current_cmd = None
 
 	def createArmTrajectory(self, values):
@@ -59,7 +64,10 @@ class WholeBodyController(object):
 		'wrist_roll_joint']
 		return jointnames
 
-	def SetPath(self, traj):
+	def SetPath(self, traj_u):
+		#traj = util.RetimeWholeBodyTimedTrajectory(self.robot,traj_u)
+		#1. BY MAKING TRAJ FOR ARM AND BASE DIFFERENTLY AND EXECUTE (good for short plans such as from PlanToConfiguration)
+		# print 'executing by cretaing arm and base traj separately'
 		# cspec = traj.GetConfigurationSpecification()
 		# dof_indices, _ = cspec.ExtractUsedIndices(self.robot)
 		# time_from_start = 0.
@@ -85,17 +93,29 @@ class WholeBodyController(object):
   #       )
 		# goal_msg = FollowJointTrajectoryGoal()
 		# goal_msg.trajectory = traj_msg
-		
+		# self.client_.send_goal(goal_msg)
+		# positions,times = util.or_traj_to_ros_vel(self.robot, traj)
+		# curr_pos= positions[0]
+		# curr_time = times[0]
+		# for i in range(len(positions)-1):
+		# 	final_base_goal = [a - b for a, b in zip(positions[i+1], curr_pos)]
+		# 	final_time_goal = times[i+1] - curr_time
+		# 	final_vel_goal = [j/final_time_goal for j in final_base_goal]
+		# 	self.logger.info('Moving by: {}'.format(final_vel_goal))
+		# 	self._current_cmd = self.Publisher.execute(final_vel_goal,final_time_goal) 
+		# 	curr_pos = positions[i+1]
+		# 	curr_time = times[i+1]
+		# print 'we have: '+str(len(positions)) + ' base positions'
+
+
+		#2. BY CREATING INDIVIDUAL JOINTTRAJECTORY POINT AT EACH STEP(ROBOT MOVEMENT IS NOT SMOOTH: but proper for our planner)
+		print 'executing by creating traj at each point'
+		cspec = traj.GetConfigurationSpecification()
 		positions,times = util.or_traj_to_ros_vel(self.robot, traj)
-		#self.client_.send_goal(goal_msg)
 		curr_pos= positions[0]
 		curr_time = times[0]
-
-
 		arm_curr = traj.GetWaypoint(0)
-
 		dt = 0.0
-		
 		for i in range(len(positions)-1):
 			final_base_goal = [a - b for a, b in zip(positions[i+1], curr_pos)]
 			final_time_goal = times[i+1] - curr_time
@@ -134,6 +154,18 @@ class WholeBodyController(object):
 			curr_time = times[i+1]
 
 		print 'we have: '+str(len(positions)) + ' base positions'
+
+
+		#3. OBTAINING DIFFERENT BASE AND ARM TRAJECTORY AND SEND YOU CONTROLLERS
+		#cspec = traj.GetConfigurationSpecification()
+		#Extract the untimed base trajectory
+		#base_traj = util.ExtractBUntimedTrajFromWholeBodyTraj(self.robot,traj)
+		#self.base_controller.SetPath(base_traj)
+		
+		
+		
+		
+
 		
 		
 		
@@ -182,7 +214,7 @@ class WholeBody():
 		base_affine_values = values[-2:]
 		arm_traj = self.robot.arm_torso.PlanToConfiguration(arm_joint_values)
 		base_traj = self.robot.base.Move(base_affine_values)
-		#self.robot.SetActiveDOFs([self.robot.GetJoint(name).GetDOFIndex() for name in self.controller.GetJointNames()],DOFAffine.X|DOFAffine.Y|DOFAffine.RotationAxis)
+		traj = util.create_whole_body_trajectory(self.robot, arm_traj, base_traj)
 		
 		if(execute):
 			self.robot.ExecuteTrajectory(traj, **kwargs)

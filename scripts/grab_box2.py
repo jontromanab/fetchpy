@@ -38,6 +38,73 @@ def createZigZagHalf(pose, length):
         poses.append(app_pose)
     return poses
 
+def createSinWave(pose, length):
+    poses = []
+    app_pose = pose
+    theta = np.linspace(0, 2*np.pi, length)
+    r = np.sqrt(length)
+    x = r * theta
+    y = r* np.sin(x)
+    for i in range(len(x)/2):
+        add = np.array([pose[0]+x[i]/(length/2),pose[1]+y[i]/length,pose[2],pose[3],pose[4],pose[5]])
+        #app_pose = app_pose+add
+        poses.append(add)
+    return poses
+
+
+def createHalfCircle(pose, radius):
+    poses = []
+    app_pose = pose
+    theta = np.linspace(0, 2*np.pi, 100)
+    r = np.sqrt(radius)
+    x = r* np.cos(theta)
+    y = r* np.sin(theta)
+    for i in range(len(x)/2):
+        add = [y[i]/20,x[i]/20,0,0,0,0]
+        app_pose = app_pose+add
+        poses.append(app_pose)
+    return poses
+
+def createHalfCircleWithDir(pose, radius, x_dir=1, y_dir=1, inverted = False):
+    poses = []
+    app_pose = pose
+    theta = np.linspace(0, 2*np.pi, 100)
+    r = np.sqrt(radius)
+    x = r* np.cos(theta)
+    y = r* np.sin(theta)
+    for i in range(len(x)/2):
+        if(inverted):
+            add = [y_dir * y[i]/20,x_dir * x[i]/20,0,0,0,0]
+        else: 
+            add = [x_dir * x[i]/20,y_dir * y[i]/20,0,0,0,0]
+        app_pose = app_pose+add
+        poses.append(app_pose)
+    return poses
+
+def createFullCircleWithDir(pose, radius, x_dir=1, y_dir=1, inverted = False):
+    poses = []
+    app_pose = pose
+    theta = np.linspace(0, 2*np.pi, 100)
+    r = np.sqrt(radius)
+    x = r* np.cos(theta)
+    y = r* np.sin(theta)
+    for i in range(len(x)):
+        if(inverted):
+            add = [y_dir * y[i]/20,x_dir * x[i]/20,0,0,0,0]
+        else: 
+            add = [x_dir * x[i]/20,y_dir * y[i]/20,0,0,0,0]
+        app_pose = app_pose+add
+        poses.append(app_pose)
+    return poses
+
+def createGolGol(pose, radius):
+    poses = createHalfCircleWithDir(pose,radius,inverted = True)
+    poses2 = createFullCircleWithDir(poses[-1], radius/4.,y_dir = -1)
+    for j in poses2:
+            poses.append(j)
+    return poses
+
+
 
 def createPattern(pose, length, num):
     poses = createZigZagHalf(pose, length)
@@ -287,7 +354,7 @@ def executePath(robot, path, resolution, handles):
 
         poses.append(pose)
         base_poses.append(base_pose)
-    save_trajectory(traj,'/home/abhi/Desktop/traj2/whole_body_timed_traj.xml')
+    save_trajectory(traj,'/home/abhi/Desktop/traj2/whole_body_zigzag_timed_traj.xml')
     all_poses.append(poses) 
     all_poses.append(base_poses) 
     #print 'size of base points: '+str(len(base_goal))
@@ -368,7 +435,7 @@ if __name__ == '__main__':
 		raw_input("Press enter to continue...")
 
 
-		poses = createPattern(transformToPose(getTransform('gripper_link')),200,2)
+		poses = createPattern(transformToPose(getTransform('gripper_link')),200,3)
 		#poses = createHalfCircleWholeWallPattern(transformToPose(getTransform('gripper_link')))
 
 		pl = plottingPoints(robot.GetEnv(),handles)
