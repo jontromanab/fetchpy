@@ -283,14 +283,14 @@ def getQDot(robot, pose, unitTime, joint_velocity_limits=None):
   
    
 def executeVelPath(robot, pose, handles,unitTime = 1.0,joint_velocity_limits=None):
-    manip = robot.SetActiveManipulator('arm_torso')
+    manip = robot.SetActiveManipulator('arm')
     basemanip = interfaces.BaseManipulation(robot)
     
     with robot:
         Tee = manip.GetEndEffectorTransform()
         TeeBase = robot.GetTransform()
         Tee_gripper = getTransform('gripper_link')
-        jointnames=['torso_lift_joint','shoulder_pan_joint','shoulder_lift_joint','upperarm_roll_joint','elbow_flex_joint','forearm_roll_joint','wrist_flex_joint','wrist_roll_joint']
+        jointnames=['shoulder_pan_joint','shoulder_lift_joint','upperarm_roll_joint','elbow_flex_joint','forearm_roll_joint','wrist_flex_joint','wrist_roll_joint']
         robot.SetActiveDOFs([robot.GetJoint(name).GetDOFIndex() for name in jointnames],DOFAffine.X|DOFAffine.Y|DOFAffine.RotationAxis)
         robot.SetAffineTranslationMaxVels([0.5,0.5,0.5])
         robot.SetAffineRotationAxisMaxVels(np.ones(4))
@@ -306,7 +306,7 @@ def executeVelPath(robot, pose, handles,unitTime = 1.0,joint_velocity_limits=Non
 from prpy.rave import save_trajectory 
 import time 
 def executePath(robot, path, resolution, handles):
-    manip = robot.SetActiveManipulator('arm_torso')
+    manip = robot.SetActiveManipulator('arm')
     print 'path: '+str(len(path))
     dis_poses = discretizePath(path, resolution)
     print 'dis_poses: '+str(len(dis_poses))
@@ -314,11 +314,11 @@ def executePath(robot, path, resolution, handles):
     base_poses = []
     all_poses = []
     all_poses.append(dis_poses)
-    jointnames=['torso_lift_joint','shoulder_pan_joint','shoulder_lift_joint','upperarm_roll_joint','elbow_flex_joint','forearm_roll_joint','wrist_flex_joint','wrist_roll_joint']
+    jointnames=['shoulder_pan_joint','shoulder_lift_joint','upperarm_roll_joint','elbow_flex_joint','forearm_roll_joint','wrist_flex_joint','wrist_roll_joint']
     robot.SetActiveDOFs([robot.GetJoint(name).GetDOFIndex() for name in jointnames],DOFAffine.X|DOFAffine.Y|DOFAffine.RotationAxis)
     cspec = robot.GetActiveConfigurationSpecification('linear')
     traj = openravepy.RaveCreateTrajectory(env, '')
-    cspec.AddGroup('joint_velocities', dof= 8, interpolation='quadratic')
+    cspec.AddGroup('joint_velocities', dof= 7, interpolation='quadratic')
     cspec.AddGroup('affine_velocities', dof= 4, interpolation='next')
     cspec.AddDeltaTimeGroup()
     traj.Init(cspec)
@@ -326,7 +326,7 @@ def executePath(robot, path, resolution, handles):
     arm_curr = robot.GetDOFValues(manip.GetArmIndices())
     base_curr = np.zeros(3)
     base_vel = np.zeros(4)
-    arm_vel_cuur = np.zeros(8)
+    arm_vel_cuur = np.zeros(7)
     dt = 0.
     value = []
     value.extend(arm_curr)
@@ -342,19 +342,20 @@ def executePath(robot, path, resolution, handles):
         pose, base_pose, arm_vel, finalgoal = executeVelPath(robot, dis_poses[i+1], handles, unitTime = 1.0)
         # now creating other waypoints of the trajectory
         value = []
-        value.extend(finalgoal[ :8])
+        value.extend(finalgoal[ :7])
         value.extend(finalgoal[-3: ])
+        #print arm_vel
         value.extend(arm_vel)
         value.extend(np.zeros(3))
         time_now = round(time.time() * 1000)
         dt = time_now - curr_time
-        value.extend([dt/10000.])
-        value.extend([dt/10000.])
+        value.extend([dt/2500.])
+        value.extend([dt/2500.])
         traj.Insert(i+1, value)
 
         poses.append(pose)
         base_poses.append(base_pose)
-    save_trajectory(traj,'/home/abhi/Desktop/traj2/whole_body_zigzag_timed_traj.xml')
+    save_trajectory(traj,'/home/abhi/Desktop/traj2/whole_body_arm_golgol_timed_traj.xml')
     all_poses.append(poses) 
     all_poses.append(base_poses) 
     #print 'size of base points: '+str(len(base_goal))
