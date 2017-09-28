@@ -25,7 +25,7 @@ class WholeBodyController(object):
 	def __init__(self, ns, robot, sim = False, timeout = 0.0):
 		self.logger = logging.getLogger(__name__)
 		self.robot = robot
-		self.client_ = actionlib.SimpleActionClient("/arm_controller/follow_joint_trajectory", FollowJointTrajectoryAction,)
+		self.client_ = actionlib.SimpleActionClient("/arm_with_torso_controller/follow_joint_trajectory", FollowJointTrajectoryAction,)
 		self.Publisher = BaseVelocityPublisher(ns, 'base_controller', timeout)
 		#self.pub_ = rospy.Publisher('/base_controller/command', Twist, queue_size=1)
 		self.base_controller = BaseVelocityController('',self.robot, 'base_controller')
@@ -54,7 +54,8 @@ class WholeBodyController(object):
 		self.robot.SetActiveDOFs([self.robot.GetJoint(name).GetDOFIndex() for name in self.GetJointNames()])
 
 	def GetJointNames(self):
-		jointnames = ['shoulder_pan_joint',
+		jointnames = ['torso_lift_joint',
+		'shoulder_pan_joint',
 		'shoulder_lift_joint',
 		'upperarm_roll_joint',
 		'elbow_flex_joint',
@@ -107,10 +108,10 @@ class WholeBodyController(object):
 
 		for iwaypoint in xrange(traj.GetNumWaypoints()):
 			waypoint = traj.GetWaypoint(iwaypoint)
-			q = waypoint[:7]
-			qd = waypoint[10:17]
-			qdd = [0.] * 7
-			dt = waypoint[-2]
+			q = waypoint[:8]
+			qd = waypoint[11:19]
+			qdd = [0.] * 8
+			dt = waypoint[-1]
 			#time_from_start += dt
 			#deltatime = time_from_start - prev_time_from_start
 			#prev_time_from_start = time_from_start
@@ -254,9 +255,9 @@ class WholeBody():
 
 	def PlanToConfiguration(self, values, execute = False, timeout = None, **kwargs):
 		from prpy.rave import save_trajectory
-		arm_joint_values = values[:7]
+		arm_joint_values = values[:8]
 		base_affine_values = values[-2:]
-		arm_traj = self.robot.arm.PlanToConfiguration(arm_joint_values)
+		arm_traj = self.robot.arm_torso.PlanToConfiguration(arm_joint_values)
 		base_traj = self.robot.base.Move(base_affine_values)
 		traj = util.create_whole_body_trajectory(self.robot, arm_traj, base_traj)
 		

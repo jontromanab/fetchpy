@@ -26,9 +26,9 @@ def or_traj_to_ros_vel(robot,traj):
 			dt = waypoint[6]
 			time.append(dt)
 		else:
-			affdofvalues = waypoint[7:10]
+			affdofvalues = waypoint[8:11]
 			#dt = cspec.ExtractDeltaTime(waypoint)
-			dt = waypoint[21]
+			dt = waypoint[22]
 			time.append(dt)
 		vel_imd = []
 		vel_imd.append(affdofvalues[0])
@@ -86,47 +86,10 @@ def ExtractBTrajFromWholeBodyTraj(robot, traj):
 	for iwaypoint in xrange(traj.GetNumWaypoints()):
 		value = []
 		waypoint = traj.GetWaypoint(iwaypoint)
-		value.extend(waypoint[7:10])
-		value.extend(waypoint[18:22])
+		value.extend(waypoint[8:11])
+		value.extend(waypoint[19:23])
 		base_traj.Insert(iwaypoint, value)
 	return base_traj
-
-def ExtractBUntimedTrajFromWholeBodyTraj(robot, traj):
-	doft = openravepy.DOFAffine.X | openravepy.DOFAffine.Y | openravepy.DOFAffine.RotationAxis
-	cspec = traj.GetConfigurationSpecification()
-	bcspec = openravepy.RaveGetAffineConfigurationSpecification(doft, robot)
-	base_traj = openravepy.RaveCreateTrajectory(robot.GetEnv(), 'GenericTrajectory')
-	base_traj.Init(bcspec)
-	for iwaypoint in xrange(traj.GetNumWaypoints()):
-		value = []
-		waypoint = traj.GetWaypoint(iwaypoint)
-		value.extend(waypoint[7:10])
-		base_traj.Insert(iwaypoint, value)
-	return base_traj
-
-def ExtractATrajFromWholeBodyTraj(robot, traj):
-	jointnames=['shoulder_pan_joint','shoulder_lift_joint','upperarm_roll_joint','elbow_flex_joint','forearm_roll_joint','wrist_flex_joint','wrist_roll_joint']
-	robot.SetActiveDOFs([robot.GetJoint(name).GetDOFIndex() for name in jointnames])
-	acspec = robot.GetActiveConfigurationSpecification('linear')
-	arm_traj = openravepy.RaveCreateTrajectory(robot.GetEnv(), '')
-	acspec.AddGroup('joint_velocities fetch 10 9 12 1 2 13 14', dof= 8, interpolation='quadratic')
-	acspec.AddDeltaTimeGroup()
-	arm_traj.Init(acspec)
-	for iwaypoint in xrange(traj.GetNumWaypoints()):
-		value = []
-		waypoint = traj.GetWaypoint(iwaypoint)
-		value.extend(waypoint[0:7])
-		value.extend(waypoint[10:18])
-		value.extend([waypoint[22]])
-		arm_traj.Insert(iwaypoint, value)
-	save_trajectory(arm_traj,'/home/abhi/Desktop/traj2/my_new_arm_timed.xml')
-	return arm_traj
-
-
-
-
-
-		
 
 
 def RetimeWholeBodyTrajectory(robot, arm_traj, base_traj):
@@ -176,7 +139,7 @@ def RetimeWholeBodyTrajectory(robot, arm_traj, base_traj):
 		robot.SetActiveDOFs(dof_indices, affine_dofs)
 		cspec = robot.GetActiveConfigurationSpecification('linear')
 		traj = openravepy.RaveCreateTrajectory(env, '')
-		cspec.AddGroup('joint_velocities', dof= 7, interpolation='quadratic')
+		cspec.AddGroup('joint_velocities', dof= 8, interpolation='quadratic')
 		cspec.AddGroup('affine_velocities', dof= 4, interpolation='next')
 		cspec.AddDeltaTimeGroup()
 		traj.Init(cspec)
@@ -203,47 +166,14 @@ def RetimeWholeBodyTrajectory(robot, arm_traj, base_traj):
 				dt = arm_waypoint[-1]
 
 			arm_way_point = arm_waypoint[:-1]
-			value.extend(arm_way_point[:7])
+			value.extend(arm_way_point[:8])
 			value.extend(base_waypoint[:3])
-			value.extend(arm_way_point[7:])
+			value.extend(arm_way_point[8:])
 			value.extend(base_waypoint[3:])
 			value.extend([dt])
 			traj.Insert(i, value)
 		 	arm_final_waypoint = arm_waypoint
 	return traj
-
-def RetimeWholeBodyTimedTrajectory(robot, traj):
-	#Retiming the whole trajectory based on remiting of affine trajectory
-	base_traj = ExtractBUntimedTrajFromWholeBodyTraj(robot,traj)
-	affine_retimer = OpenRAVEAffineRetimer()
-	wcspec = traj.GetConfigurationSpecification()
-	dof_indices, _ = wcspec.ExtractUsedIndices(robot)
-	affine_dofs = (DOFAffine.X | DOFAffine.Y | DOFAffine.RotationAxis)
-	env = traj.GetEnv()
-	postprocess_envs = robot._postprocess_envs[openravepy.RaveGetEnvironmentId(env)]
-	affine_retimer_options = dict()
-	with Clone(env, clone_env = postprocess_envs) as cloned_env:
-		cloned_robot = cloned_env.Cloned(robot)
-		cloned_robot.SetActiveDOFs([],affine_dofs)
-		base_timed_traj = affine_retimer.RetimeTrajectory(cloned_robot, base_traj, **affine_retimer_options)
-		base_final_traj = CopyTrajectory(base_timed_traj, env = env)
-	with env:
-		new_traj = openravepy.RaveCreateTrajectory(env, '')
-		new_traj.Init(wcspec)
-		for i in xrange(base_final_traj.GetNumWaypoints()):
-			value = []
-			waypoint_prev = traj.GetWaypoint(i)
-			waypoint_base = base_final_traj.GetWaypoint(i)
-			dt = waypoint_base[-1]
-			value.extend(waypoint_prev[:22])
-			#value.extend([dt])
-			value.extend([dt])
-			new_traj.Insert(i, value)
-	save_trajectory(new_traj,'/home/abhi/Desktop/traj2/whole_body_zigzag_my_timed.xml')
-	return new_traj
-
-
-	
 
 def create_whole_body_trajectory(robot, arm_traj, base_traj):
 	env = arm_traj.GetEnv()

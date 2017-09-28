@@ -107,9 +107,9 @@ def createGolGol(pose, radius):
 
 
 def createPattern(pose, length, num):
-    poses = createGolGol(pose, length)
+    poses = createZigZagHalf(pose, length)
     for i in range(num-1):
-        add_poses = createGolGol(poses[-1], length)
+        add_poses = createZigZagHalf(poses[-1], length)
         for j in add_poses:
             poses.append(j)
     return poses
@@ -348,8 +348,8 @@ def executePath(robot, path, resolution, handles):
         value.extend(np.zeros(3))
         time_now = round(time.time() * 1000)
         dt = time_now - curr_time
-        value.extend([dt/10000.])
-        value.extend([dt/10000.])
+        value.extend([dt/5000.])
+        value.extend([dt/5000.])
         traj.Insert(i+1, value)
 
         poses.append(pose)
@@ -435,7 +435,7 @@ if __name__ == '__main__':
 		raw_input("Press enter to continue...")
 
 
-		poses = createPattern(transformToPose(getTransform('gripper_link')),0.04,2)
+		poses = createPattern(transformToPose(getTransform('gripper_link')),200,3)
 		#poses = createHalfCircleWholeWallPattern(transformToPose(getTransform('gripper_link')))
 
 		pl = plottingPoints(robot.GetEnv(),handles)
@@ -447,7 +447,7 @@ if __name__ == '__main__':
 			new_trns = np.dot(trns,stat_trns)
 			new_poses.append(transformToPose(new_trns))
 		handles =[]
-		all_poses = executePath(robot, new_poses, 1000, handles)
+		all_poses = executePath(robot, new_poses, 10, handles)
 		
 		
 
