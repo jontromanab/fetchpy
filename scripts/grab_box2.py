@@ -249,7 +249,7 @@ def getGoalToExecute(robot, pose, unitTime):
 def getQDot(robot, pose, unitTime, joint_velocity_limits=None):
     joint_limit_tolerance=3e-2
     manip = robot.GetActiveManipulator()
-    vel = getVel(transformToPose(manip.GetEndEffectorTransform()), pose)
+    vel = getVel(transformToPose(manip.GetEndEffectorTransform()), pose, unitTime)
     full_jacob = calculateFullJacobian(robot)
     jacob_inv = np.linalg.pinv(full_jacob)
     q_dot = numpy.dot(jacob_inv, vel)
@@ -339,7 +339,7 @@ def executePath(robot, path, resolution, handles):
     curr_time = round(time.time() * 1000)
     
     for i in range(len(dis_poses)-1):
-        pose, base_pose, arm_vel, finalgoal = executeVelPath(robot, dis_poses[i+1], handles)
+        pose, base_pose, arm_vel, finalgoal = executeVelPath(robot, dis_poses[i+1], handles, unitTime = 1.0)
         # now creating other waypoints of the trajectory
         value = []
         value.extend(finalgoal[ :8])
@@ -348,8 +348,8 @@ def executePath(robot, path, resolution, handles):
         value.extend(np.zeros(3))
         time_now = round(time.time() * 1000)
         dt = time_now - curr_time
-        value.extend([dt/2500.])
-        value.extend([dt/2500.])
+        value.extend([dt/10000.])
+        value.extend([dt/10000.])
         traj.Insert(i+1, value)
 
         poses.append(pose)
@@ -435,7 +435,7 @@ if __name__ == '__main__':
 		raw_input("Press enter to continue...")
 
 
-		poses = createPattern(transformToPose(getTransform('gripper_link')),200,3)
+		poses = createPattern(transformToPose(getTransform('gripper_link')),200,2)
 		#poses = createHalfCircleWholeWallPattern(transformToPose(getTransform('gripper_link')))
 
 		pl = plottingPoints(robot.GetEnv(),handles)
@@ -447,7 +447,7 @@ if __name__ == '__main__':
 			new_trns = np.dot(trns,stat_trns)
 			new_poses.append(transformToPose(new_trns))
 		handles =[]
-		all_poses = executePath(robot, new_poses, 500, handles)
+		all_poses = executePath(robot, new_poses, 10, handles)
 		
 		
 

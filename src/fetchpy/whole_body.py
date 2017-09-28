@@ -64,7 +64,7 @@ class WholeBodyController(object):
 		'wrist_roll_joint']
 		return jointnames
 
-	def SetPath(self, traj_u):
+	def SetPath(self, traj):
 		#traj = util.RetimeWholeBodyTimedTrajectory(self.robot,traj_u)
 		#1. BY MAKING TRAJ FOR ARM AND BASE DIFFERENTLY AND EXECUTE (good for short plans such as from PlanToConfiguration)
 		# print 'executing by cretaing arm and base traj separately'
@@ -79,7 +79,7 @@ class WholeBodyController(object):
 		# 	q = waypoint[:8]
 		# 	qd = waypoint[11:19]
 		# 	qdd = [0.] * 8
-		# 	dt = waypoint[-1]
+		# 	dt = waypoint[-2]
 		# 	time_from_start += dt
 		# 	deltatime = time_from_start - prev_time_from_start
 		# 	prev_time_from_start = time_from_start
