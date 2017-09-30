@@ -13,6 +13,7 @@ from prpy.clone import Clone, Cloned
 logger = logging.getLogger('fetchpy')
 
 def or_traj_to_ros_vel(robot,traj):
+''' Creates a consecutive set of velocities and timestamps from an openrave affine trajectory '''
 	positions = []
 	time = []
 	cspec = traj.GetConfigurationSpecification()
