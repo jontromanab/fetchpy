@@ -38,6 +38,7 @@ def or_traj_to_ros_vel(robot,traj):
 	return positions, time
 
 def create_affine_trajectory(robot, poses):
+''' Creates an untimed openrave affine trajectory from a set of affine poses '''
     doft = openravepy.DOFAffine.X | openravepy.DOFAffine.Y | openravepy.DOFAffine.RotationAxis
     cspec = openravepy.RaveGetAffineConfigurationSpecification(doft, robot)
     traj = openravepy.RaveCreateTrajectory(robot.GetEnv(), 'GenericTrajectory')
