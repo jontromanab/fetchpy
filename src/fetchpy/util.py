@@ -49,6 +49,7 @@ def create_affine_trajectory(robot, poses):
     return traj
 
 def create_new_base_waypoints(base_joint_values, size):
+''' Creates new base waypoints from the center to given point '''
 	first_point = np.array([0,0,0])
 	last_point = np.array([base_joint_values[0], 0, base_joint_values[1]])
 	diff = (first_point - last_point)/(size-1)
