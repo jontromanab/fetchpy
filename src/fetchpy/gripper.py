@@ -165,6 +165,7 @@ class GRIPPER(EndEffector):
 		
 
 	def GetJointState(self):
+		""" returns current joint values of the gripper joints """
 		jointnames=(['l_gripper_finger_joint','r_gripper_finger_joint'])
 		self.robot.SetActiveDOFs([self.robot.GetJoint(name).GetDOFIndex() for name in jointnames])
 		values = self.robot.GetActiveDOFValues()
@@ -184,9 +185,13 @@ class GRIPPER(EndEffector):
 		
 
 	def GetIndices(self):
+		""" returns indices of the gripper joints
+		"""
 		return self.GetFingerIndices()
 
 	def _GetJointFromName(self, name):
+		""" returns the joint names of the gripper
+		"""
 		robot = self.manipulator.GetRobot()
 		print self.manipulator.GetName()
 		full_name = '/{:s}/{:s}'.format(self.manipulator.GetName(), name)
