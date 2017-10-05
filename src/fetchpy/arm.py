@@ -22,9 +22,15 @@ class ARM(Manipulator):
 			self.servo_simulator = ServoSimulator(self, rate = 20, watchdog_timeout = 0.1)
 
 	def IsSimulated(self):
+		""" Decides if manipulator is simulated.
+		@returns bool
+		"""
 		return self.simulated
 
 	def GetJointNames(self):
+		""" sets the joint names based between arm or arm_torso
+		@returns list of joint names
+		"""
 		jointnames = ['shoulder_pan_joint',
 		 'shoulder_lift_joint',
 		 'upperarm_roll_joint',
@@ -45,6 +51,8 @@ class ARM(Manipulator):
 			self._SetupIK(self._iktype)
 
 	def _SetupIK(self, iktype):
+		""" creates Ikfast file for chosen manipulator
+		"""
 		from openravepy.databases.inversekinematics import InverseKinematicsModel
 
 		robot = self.GetRobot()
@@ -61,6 +69,8 @@ class ARM(Manipulator):
 
 
 	def SetStiffnes(self,stiffness):
+		""" sets stiffness of the manipulator
+		"""
 		raise NotImplementedError('Not Implemented yet.'
     		'There is a gravity compensation controller on real robot. Just subscribe to that and enable/disable')
 
