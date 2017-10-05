@@ -20,6 +20,7 @@ from trajectory_msgs.msg import (JointTrajectoryPoint, JointTrajectory)
 from geometry_msgs.msg import (PointStamped, Vector3)
 
 class PointHeadClient(object):
+	""" Creates pointhead client to point the head towrads desired poition """
 	def __init__(self, ns, controller_name, timeout = 0.0):
 		self.log = logging.getLogger(__name__)
 		as_name = ns + '/' + controller_name + '/point_head'
@@ -41,6 +42,7 @@ class PointHeadClient(object):
 
 
 class PointHeadController(OrController):
+	""" controller for point head client """
 	def __init__(self,namespace, controller_name, simulated = False, timeout = 10.0):
 		if simulated:
 			raise NotImplementedError('Simulation not supported here')
@@ -63,6 +65,7 @@ class PointHeadController(OrController):
 
 
 class FollowJointTrajectoryController(RewdOrController):
+	""" followjointtrajectory controller for the head """
 	def __init__(self, robot, namespace, controller_name, joint_names, simulated = False):
 		super(FollowJointTrajectoryController, self).__init__(robot,
 			namespace, joint_names, simulated)
@@ -108,36 +111,46 @@ class HEAD(ARM):
 				affine_dofs = 0, simulated = sim)
 
 	def LookAt(self, value, timeout = None):
+		""" looks at position provided by user """
 		self.look_at_controller.SetDesired(value)
 		util.WaitForControllers([self.look_at_controller], timeout=timeout)
 
 
 	def GetJointNames(self):
+		""" returns the joint names in the head """
 		jointnames = ['head_pan_joint','head_tilt_joint']
 		return jointnames
 
 	def SetActive(self):
+		""" sets head as the active manipulator """
 		self.robot.SetActiveDOFs([self.robot.GetJoint(name).GetDOFIndex() for name in self.GetJointNames()])
 
 	def GetIndices(self):
+		""" returns indices of the joints in head """
 		self.SetActive()
 		values =  self.robot.GetActiveDOFIndices()
 		return values
 	
 	def GetJointState(self):
+		""" returns current joint values of the head """
 		self.SetActive()
 		values = self.robot.GetActiveDOFValues()
 		return values
 
 	def GetName(self):
+		""" returns name of the head """
 		return 'head'
 
 	def GetMaxVelocity(self):
+		""" returns max velocity of the joints in head """
 		self.SetActive()
 		values = self.robot.GetActiveDOFMaxVel()
 		return values
 
 	def CreateTrajectory(self,value):
+		""" creates custom trajectory for the head 
+		@ returns ROS followjointTrajectory
+		"""
 		max_vel = self.GetMaxVelocity()
 		curr_val = self.GetJointState()
 		traj_msg = JointTrajectory()
@@ -165,6 +178,7 @@ class HEAD(ARM):
 		return traj_msg
 
 	def MoveTo(self, value, timeout = None):
+		""" Moves the head to desired value provided by the user """
 		if self.simulated:
 			self.controller.SetDesired(value)
 			util.WaitForControllers([self.controller], timeout = timeout)
@@ -174,6 +188,7 @@ class HEAD(ARM):
 			util.WaitForControllers([self.controller], timeout = timeout)
 
 	def MoveToNamedConfiguration(self, name, timeout=None):
+		""" Moves the head to named configuration provided in the yaml file """
 		try:
 			configurations = self.robot.configurations
 		except AttributeError:
