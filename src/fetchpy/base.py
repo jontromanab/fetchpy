@@ -14,12 +14,17 @@ logger = logging.getLogger('fetchpy')
 
 
 class BaseVelocityPublisher(object):
+	""" Class for publishing velocity to ros base controller """
 	def __init__(self, ns, controller_name, timeout = 0.0):
 		self.log = logging.getLogger(__name__)
 		as_name = ns + '/' + controller_name+'/command'
 		self._pub = rospy.Publisher(as_name,Twist, queue_size=10)
 
 	def execute(self, vel, time = 1.0):
+		""" publishes velocity for certain amount of time
+		@param vel the velocity to be published
+		@param time the duration the velocity will be published
+		"""
 		goal_msg = Twist()
 		curr_vel = [0.0, 0.0]
 		disc_vel = numpy.array(vel)
@@ -31,18 +36,9 @@ class BaseVelocityPublisher(object):
 			self._pub.publish(goal_msg)
 			var_time = rospy.Time.now()
 
-
-		# for i in range(10):
-		# 	goal_msg.linear.x = disc_vel[0]
-		# 	goal_msg.angular.z = disc_vel[1]
-		# 	#print 'goal_msg'+str(goal_msg.linear.x)+" , "+str(goal_msg.angular.z)
-		# 	self._pub.publish(goal_msg)
-		# 	rospy.sleep(0.1)
-
-
-
 class BaseVelocityController(OrController):
 	def __init__(self, namespace, robot, controller_name, simulated = False, timeout = 10.0):
+		""" Openrave controller to publish velocity to ROS controller """
 		if simulated:
 			raise NotImplementedError('Simulation not supported here')
 		self.logger = logging.getLogger(__name__)
