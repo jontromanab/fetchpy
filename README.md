@@ -176,7 +176,7 @@ The whole body of the robot specifies the arm, torso and the base combined. To m
 angle = ([0.3, 0.35, -0.5, 0.5, 0.75, -0.55, 0.78, 0.9, 1.0, 0.0])
 robot.wholebody.PlanToConfiguration(angle, execute = True)
 ```
-here the first 7 joints are for the 7DOF arm, 8th component is the torso and the last 2 parameters are for the base. `1.0,0.0` specifies linear translation of 1meter.
+here the first 7 joints are for the 7DOF arm, 8th component is the torso and the last 2 parameters are for the base. `1.0, 0.0` specifies linear translation of 1 meter.
 
 
 
